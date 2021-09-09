@@ -1,0 +1,1 @@
+Este repositorio contiene el firmware para los sensores de nivel del proyecto de monitorizacion de la presa.
