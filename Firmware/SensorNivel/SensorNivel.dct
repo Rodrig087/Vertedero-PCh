@@ -988,7 +988,6 @@ altivt_bit
 alts
 alts
 alts_bit
-altura
 amsk_0
 amsk_0_bit
 amsk_1
@@ -1009,14 +1008,12 @@ amsk_8
 amsk_8_bit
 amsk_9
 amsk_9_bit
-aproximardistancia
 asam
 asam
 asam_bit
 asin
 atan
 atan2
-aux_value
 b
 b0
 b1
@@ -1034,10 +1031,8 @@ b6
 b7
 b8
 b9
-banp
 banrsc
 banrsi
-bant
 bcd2dec
 bcd2dec16
 bcl
@@ -1111,10 +1106,7 @@ bytetostr
 c
 c
 c_bit
-calculardistancia
-calcularmoda
-calcularvelocidadsonido
-caudal
+calculart2
 ceid
 ceid
 ceid
@@ -1181,11 +1173,6 @@ ch123sa_bit
 ch123sb
 ch123sb
 ch123sb_bit
-chaltura
-chcaudal
-chidst
-chkadj
-chnivel
 chps
 chps_0
 chps_0_bit
@@ -1193,10 +1180,6 @@ chps_1
 chps_1_bit
 chps0
 chps1
-cht2prom
-chtemp
-chtof
-chtt2
 cke
 cke
 cke_bit
@@ -1366,7 +1349,7 @@ cnterr
 cnterr
 cnterr_bit
 configuracionprincipal
-contp
+contpulsos
 conts
 corcon
 corconbits
@@ -1419,8 +1402,6 @@ d_a_bit
 da
 da
 da_bit
-dato
-datoptcn
 dc
 dc
 dc_bit
@@ -1517,7 +1498,6 @@ disslw
 disslw
 disslw
 disslw_bit
-distanciaestimada
 div0err
 div0err
 div0err_bit
@@ -1627,7 +1607,6 @@ dostartl_8
 dostartl_8_bit
 dostartl_9
 dostartl_9_bit
-doub
 doze
 doze_0
 doze_0_bit
@@ -1641,7 +1620,6 @@ doze2
 dozen
 dozen
 dozen_bit
-dst
 dta
 dta
 dta
@@ -1804,7 +1782,7 @@ dx
 edt
 edt
 edt_bit
-end
+enviartramaint
 enviartramars485
 erase
 erase_
@@ -1860,9 +1838,6 @@ faov3l
 faov3l
 faov3l
 faov3l_bit
-fcaudal
-fcn
-fdreal
 ferr
 ferr
 ferr_bit
@@ -1942,7 +1917,6 @@ fltam
 fltam_bit
 fltam_p1fltacon_bit
 fltam_p2fltacon_bit
-fnivel
 form
 form_0
 form_0_bit
@@ -1982,7 +1956,6 @@ generarpulso
 get_fosc_khz
 get_fosc_per_cyc
 h
-hdr
 i
 i_rs485
 i0
@@ -2486,7 +2459,6 @@ icxcon
 idle
 idle
 idle_bit
-idst
 iec0
 iec0bits
 iec1
@@ -2701,13 +2673,10 @@ ipmien
 ipmien
 ipmien_bit
 ipp
-iptr
 ir
 iren
 iren
 iren_bit
-it2prom
-itof
 iue
 iue
 iue
@@ -2847,7 +2816,6 @@ iwcol
 iwcol_bit
 j
 k
-kadj
 lata
 lata0
 lata0
@@ -2917,7 +2885,6 @@ latb9_bit
 latbbits
 ldexp
 leerds18b20
-leertemperatura
 lock
 lock_
 lock_bit
@@ -2936,7 +2903,6 @@ lposcen
 lposcen
 lposcen_bit
 ltrim
-m
 main
 matherr
 matherr
@@ -2976,20 +2942,11 @@ maxcnt_8_bit
 maxcnt_9
 maxcnt_9_bit
 maxindex
-mb2
-mb3
-mc1
-mc2
-mc3
-me1
-me2
-me3
 memchr
 memcmp
 memcpy
 memmove
 memset
-mi
 mi2c1ie
 mi2c1ie
 mi2c1ie_bit
@@ -3025,9 +2982,6 @@ msten_bit
 n
 n
 n_bit
-nd
-nivel
-nm
 nosc
 nosc_0
 nosc_0_bit
@@ -3042,7 +2996,7 @@ nsm
 nstdis
 nstdis
 nstdis_bit
-num
+numeromuestras
 nvmcon
 nvmconbits
 nvmkey
@@ -3882,7 +3836,6 @@ pr3_8_bit
 pr3_9
 pr3_9_bit
 procesarsolicitud
-psize
 psv
 psv
 psv_bit
@@ -3920,7 +3873,6 @@ ptckps0
 ptckps1
 ptckps1
 ptckps1
-ptcn
 ptcon
 ptconbits
 ptdir
@@ -4812,8 +4764,6 @@ rsen
 rsen
 rsen
 rsen_bit
-rsize
-rspt
 rtrim
 rtsmd
 rtsmd
@@ -5453,7 +5403,6 @@ tcs_bit
 tcs_t1con_bit
 tcs_t2con_bit
 tcs_t3con_bit
-temperaturaint
 test
 test_direction
 tgate
@@ -5715,7 +5664,6 @@ tsidl_t3con_bit
 tsync
 tsync
 tsync_bit
-tt2
 tun
 tun_0
 tun_0_bit
@@ -5971,7 +5919,7 @@ uxmode
 uxrxreg
 uxsta
 uxtxreg
-value
+valorabsoluto
 vcfg
 vcfg_0
 vcfg_0_bit
@@ -5984,7 +5932,6 @@ vcfg1
 vcfg2
 vdelay_advanced_ms
 vdelay_ms
-vdistancia
 vecnum
 vecnum_0
 vecnum_0_bit
@@ -6017,13 +5964,13 @@ vector_multiply
 vector_negate
 vector_set
 vector_subtract
+vectorenvolvente
+vectormuestreo
 vectorpower
 vectorscale
-vi
 vregs
 vregs
 vregs_bit
-vsonido
 w0
 w1
 w10

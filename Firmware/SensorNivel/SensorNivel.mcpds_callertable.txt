@@ -10,76 +10,23 @@ main
 UART1Interrupt
 	UART1_Read
 	ProcesarSolicitud
-		AproximarDistancia
-			CalcularDistancia
-				GenerarPulso
-					Vector_Max
-					_Long2Float
-					_Sub_FP
-						_AddSub_FP
-					_Mul_FP
-					_AddSub_FP
-					_Div_FP
-					_Float2Longint
-				CalcularVelocidadSonido
-					LeerTemperatura
-						Ow_Reset
-							Delay_500us
-							Delay_80us
-						Ow_Write
-							Delay_80us
-							Delay_1us
-							Delay_50us
-						Ow_Read
-							Delay_1us
-							Delay_50us
-						_Long2Float
-						_Div_FP
-						_AddSub_FP
-					sqrt
-						frexp
-						ldexp
-							_Compare_Le_Fp
-								_Compare_Fp
-						_Compare_Le_Fp
-						_Div_FP
-						_AddSub_FP
-					_Div_FP
-					_AddSub_FP
-					_Mul_FP
-				modf
-					_Compare_Ge_Fp
-						_Compare_Fp
-					_Compare_Le_Fp
-					_Float2Longint
-					_Long2Float
-					_Sub_FP
-				ceil
-					_Float2Longint
-					_Long2Float
-					_Compare_Le_Fp
-					_AddSub_FP
-				floor
-					_Float2Longint
-					_Long2Float
-					_Compare_Ge_Fp
-					_Sub_FP
-					_Compare_Le_Fp
-				_Div_FP
-				_AddSub_FP
+		CalcularT2
+			GenerarPulso
+				Vector_Max
+				_Long2Float
 				_Sub_FP
+					_AddSub_FP
 				_Mul_FP
-				_Compare_Ge_Fp
+				_AddSub_FP
+				_Div_FP
 				_Float2Longint
-				_Compare_Le_Fp
-			CalcularModa
+			_Div_FP
+			_Sub_FP
+			_Compare_Le_Fp
+				_Compare_Fp
+			_AddSub_FP
 		EnviarTramaRS485
 			UART1_Write
 			UART1_Tx_Idle
-		LeerDS18B20
-			Ow_Reset
-			Ow_Write
-			Ow_Read
-		LeerTemperatura
 Timer2Interrupt
 Timer1Interrupt

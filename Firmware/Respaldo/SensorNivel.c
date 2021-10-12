@@ -72,22 +72,48 @@ unsigned char solicitudCabeceraRS485[5];                                        
 unsigned char solicitudPyloadRS485[15];                                         //Vector para almacenar el pyload de la trama RS485 recibida
 unsigned char respuestaPyloadRS485[15];                                         //Vector para almacenar el pyload de la trama RS485 a enviar
 unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, IDNODO};   //Trama de 10 elementos para probar la comunicacion RS485
-
 //Variables para la peticion y respuesta de datos:
+//unsigned int Id;                                        //Identificador de esclavo
+const short Psize = 6;                                  //Constante de longitud de trama de Peticion
+const short Rsize = 6;                                  //Constante de longitud de trama de Respuesta
+const short Hdr = 0x3A;                                 //Constante de delimitador de inicio de trama (0x3A)
+const short End = 0x0D;                                 //Constante de delimitador de final de trama (0x0D)
+unsigned char Ptcn[Psize];                              //Trama de peticion
+unsigned char Rspt[Rsize];                              //Trama de respuesta
 unsigned short ir, ip, ipp;                             //Subindices para las tramas de peticion y respuesta
+unsigned short BanP, BanT;                              //Bandera de peticion de datos
+unsigned short Fcn;                                     //Variable para el tipo de funcion
+unsigned int DatoPtcn;                                  //Variable para el Dato de la peticion
+unsigned short Dato;                                    //Variable para almacenar los datos que recibe por Uart
+unsigned int Altura;                                    //Variable para almacenar la Altura de instalacion del sensor
+unsigned int Nivel;
+float FNivel, FCaudal;                                  //Variables para almacenar el Nivel y el Caudal en punto flotante
+unsigned int TemperaturaInt, Caudal, ITOF;                 //Variables para almacenar la Temperatura, Caudal, TOF en entero sin signo
+int Kadj;                                               //Variable de factor de calibracion
+unsigned char *chTemp, *chCaudal, *chNivel,
+*chKadj, *chTOF, *chAltura;                             //Variables tipo puntero para la Temperatura, Caudal, Nivel, factor de calibracion, TOF
+float FDReal;                                           //Variable para almacenar la distancia real para la calibracion
+unsigned int IT2prom;
+unsigned char *chT2prom;
+float doub;
+float *iptr;
+short num;                                              //Variable para realizar pruebas
+
+//Variable para Calcular la Velocidad del sonido
+float vSonido;
 
 //Variables para la generacion de pulsos de exitacion del transductor ultrasonico
-unsigned int contPulsos;
+unsigned int contp;
 
 //Variables para el almacenamiento de la señal muestreada:
-const unsigned int numeroMuestras = 350;
-unsigned int vectorMuestreo[numeroMuestras];
-unsigned int vectorEnvolvente[numeroMuestras];
+const unsigned int nm = 350;
+unsigned int M[nm];
 unsigned int k;
 short bm;
 
 //Variables para la deteccion de la Envolvente de la señal
-unsigned int valorAbsoluto;
+unsigned int value = 0;
+unsigned int aux_value = 0;
 
 //Variables para el filtrado de la señal
 float x0=0, x1=0, x2=0, y0=0, y1=0, y2=0;
@@ -114,17 +140,25 @@ float nx, dx, tmax;
 //Variables para calcular la Distancia
 short conts;
 float T2a, T2b;
-const short Nsm=30;                                     //Numero maximo de secuencias de medicion (3)
+const short Nsm=3;                                      //Numero maximo de secuencias de medicion (3)
 const float T2umb = 3.0;                                //Umbral para precision (3us)
 const float T1 = 1375.0;                                //T0+T1. Altura minima de instalacion = 250 mm
 float T2adj;                                            //Variable para la calibracion de T2
 float T2sum,T2prom;
-float T2, TOF;
+float T2, TOF, Dst;
+unsigned int IDst;
+unsigned char *chIDst;
+long TT2;
+unsigned char *chTT2;
+unsigned int distanciaEstimada;
+unsigned int Vdistancia[10];
 
-
-
-
-
+//Variables para calcular la moda estadistica
+unsigned int ME1=0, ME2=0, ME3=0;                       //Variables para almacenar los 3 posibles valores de una medicion de distancia
+unsigned short Mb2=0, Mb3=0;                            //Banderas
+unsigned short Mc1=0, Mc2=0, Mc3=0;                     //Contadores de mediciones de distancia
+unsigned short mi=0, vi=0;                              //Subindices para el calculo de la Moda y la Distancia
+const short nd = 10;                                    //Numero de secuencias de medicion de Distancia
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -133,8 +167,8 @@ void ConfiguracionPrincipal();
 void ProcesarSolicitud(unsigned char, unsigned char);
 int LeerDS18B20();
 void GenerarPulso();
-float CalcularT2();
-EnviarTramaInt(unsigned char*, unsigned char*);
+int CalcularTOF();
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -150,7 +184,7 @@ void main() {
      j = 0;
      x = 0;
      y = 0;
-
+     distanciaEstimada = 0;
      T2 = 0;
      bm = 0;
      //Comunicacion RS485:
@@ -162,6 +196,9 @@ void main() {
      //Puertos:
      TEST = 0;
 
+     T2adj = 460.0;                                                             //Factor de calibracion de T2: Con Temp=20 y Vsnd=343.2, reduce la medida 1mm por cada 3 unidades que se aumente a este factor
+     Kadj = 0;                                                                  //Fija la constante de ajuste en 0
+     Altura = 275;                                                              //Fija la altura de instalacion del sensor en 275mm
 
      ip=0;
 
@@ -270,7 +307,8 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
      switch (funcionRS485){
           case 1:
                //Solicitud de medicion:
-               CalcularT2();
+               AproximarDistancia();                                                 //Realiza una secuencia de calculo de la distancia
+               //CalcularDistancia(); //**prueba
                break;
           case 2:
                //T2CON.TON = 0; //**prueba
@@ -278,7 +316,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                switch (subFuncionRS485){ 
                     case 1:
                          //Lectura de la distancia [mm-int]:
-                         //datoInt = distanciaEstimada;
+                         datoInt = distanciaEstimada;
                          respuestaPyloadRS485[0] = *(ptrDatoInt);                    //Llena la trama del payload de respuesra con los valores asociados al puntero
                          respuestaPyloadRS485[1] = *(ptrDatoInt+1);
                          cabeceraSolicitud[3] = 2;                                   //Actualiza el numero de datos de la cabecera
@@ -286,21 +324,42 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          break;
                     case 2:
                          //Lectura del sensor DS18B20 [int]:
-                         //datoInt= LeerDS18B20();
+                         datoInt= LeerDS18B20();
                          respuestaPyloadRS485[0] = *(ptrDatoInt);
                          respuestaPyloadRS485[1] = *(ptrDatoInt+1);
                          cabeceraSolicitud[3] = 2;
                          EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
                          break;
                     case 3:
-                         //Lectura de la trama de muestreo:
-                         //EnviarTramaInt(vectorMuestreo);
+                         //Lectura de altura de instalacion[int-mm]:
+                         datoInt = Altura;
+                         respuestaPyloadRS485[0] = *(ptrDatoInt);
+                         respuestaPyloadRS485[1] = *(ptrDatoInt+1);
+                         cabeceraSolicitud[3] = 2;
+                         EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
                          break;
                     case 4:
-                         //Lectura de la trama de envolvente:
-                         //EnviarTramaInt(vectorEnvolvente);
+                         //Lectura de la constante T2adj [float]:
+                         //datoFloat = T2adj;
+                         datoFloat = LeerTemperatura();
+                         respuestaPyloadRS485[0] = *(ptrDatoFloat);
+                         respuestaPyloadRS485[1] = *(ptrDatoFloat+1);
+                         respuestaPyloadRS485[2] = *(ptrDatoFloat+2);
+                         respuestaPyloadRS485[3] = *(ptrDatoFloat+3);
+                         cabeceraSolicitud[3] = 4;
+                         EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
+                         break;
+                    case 5:
+                         //Lectura de la constante [short-mm]:
+                         datoShort = Kadj;
+                         respuestaPyloadRS485[0] = datoShort;
+                         cabeceraSolicitud[3] = 1;
+                         EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
                          break;
                }
+          case 3:
+               //Solicitud de escritura de datos:
+
                break;
           case 4:
                //Test de comunicacion RS485:
@@ -341,6 +400,48 @@ int LeerDS18B20(){
 }
 
 //*****************************************************************************************************************************************
+//Funcion para la obtener la temperatura del sensor DS18B20
+float LeerTemperatura(){
+
+     unsigned int temperaturaCrudo, temperaturaInt;
+     float temperaturaDec, temperaturaResultado;
+      
+     //----Lectura del sensor----
+     Ow_Reset(&PORTA, 0);                                                       //Onewire reset signal
+     Ow_Write(&PORTA, 0, 0xCC);                                                 //Issue command SKIP_ROM
+     Ow_Write(&PORTA, 0, 0x44);                                                 //Issue command CONVERT_T
+     Delay_us(120);
+     Ow_Reset(&PORTA, 0);
+     Ow_Write(&PORTA, 0, 0xCC);                                                 //Issue command SKIP_ROM
+     Ow_Write(&PORTA, 0, 0xBE);                                                 //Issue command READ_SCRATCHPAD
+     Delay_ms(400);
+     temperaturaCrudo = Ow_Read(&PORTA, 0);
+     temperaturaCrudo = (Ow_Read(&PORTA, 0) << 8) + temperaturaCrudo;
+
+     //----Conversion de datos----
+     //Extrae la parte entera:
+     temperaturaInt = temperaturaCrudo >> 4;
+     //Extrae la parte decimal:
+     temperaturaDec = ((temperaturaCrudo & 0x000F) * 625)/10000.0;
+     //Suma la parte entera mas la parte decimal:
+     temperaturaResultado = temperaturaInt + temperaturaDec;                    //Expresa la temperatura en punto flotante
+
+     return  temperaturaResultado;
+
+}
+
+//*****************************************************************************************************************************************
+//Funcion para calcular la velocidad el sonido:
+float CalcularVelocidadSonido(){
+
+     float temperatura_Float, vSonido;
+     temperatura_Float = LeerTemperatura();
+     vSonido = 331.45 * sqrt(1+(temperatura_Float/273));
+     return vSonido;
+
+}
+
+//*****************************************************************************************************************************************
 //Funcion para la generacion y procesamiento de la señal
 void GenerarPulso(){
 
@@ -348,7 +449,7 @@ void GenerarPulso(){
 
      // Generacion de pulsos y captura de la señal de retorno:
      bm = 0;
-     contPulsos = 0;                                                                 //Limpia la variable del contador de pulsos
+     contp = 0;                                                                 //Limpia la variable del contador de pulsos
      RB2_bit = 0;                                                               //Limpia el pin que produce los pulsos de exitacion del transductor
      T1CON.TON = 0;                                                             //Apaga el TMR1
      TMR2 = 0;                                                                  //Encera el TMR2
@@ -360,26 +461,30 @@ void GenerarPulso(){
      if (bm==1){
 
           //Determinacion de la amplitud media de la señal:                     //**Esta parte podria revisar. Es realmente necesario considerar la parte negativa de la señal?
+          //Mmax = Vector_Max(M, nm, &MIndexMax);
+          //Mmin = Vector_Min(M, nm, &MIndexMin);
+          //Mmed = Mmax-((Mmax-Mmin)/2);
           Mmed = 508;                                                           //Medido con el osciloscopio: Vmean = 1.64V => 508.4adc
+          
 
-          for (k=0;k<numeroMuestras;k++){
+          for (k=0;k<nm;k++){
 
               //Valor absoluto
-              valorAbsoluto = vectorMuestreo[k]-Mmed;
-              if (vectorMuestreo[k]<Mmed){
-                 valorAbsoluto = (vectorMuestreo[k]+((Mmed-vectorMuestreo[k])*2))-(Mmed);
+              value = M[k]-Mmed;
+              if (M[k]<Mmed){
+                 value = (M[k]+((Mmed-M[k])*2))-(Mmed);
               }
 
               //Filtrado
               //Corrimiento continuo de la señal x[n]
               for( f=O-1; f!=0; f-- ) XFIR[f]=XFIR[f-1];
               //Adquisición de una muestra de 10 bits en, x[0]
-              XFIR[0] = (float)(valorAbsoluto);
+              XFIR[0] = (float)(value);
               //Convolución continúa.
               y0 = 0.0; for( f=0; f<O; f++ ) y0 += h[f]*XFIR[f];
 
               YY = (unsigned int)(y0);                                          //Reconstrucción de la señal: y en 10 bits.
-              vectorEnvolvente[k] = YY;
+              M[k] = YY;
 
           }
 
@@ -390,11 +495,11 @@ void GenerarPulso(){
       // Cálculo del punto maximo y TOF
       if (bm==2){
 
-         yy1 = Vector_Max(vectorEnvolvente, numeroMuestras, &maxIndex);                                    //Encuentra el valor maximo del vector R
+         yy1 = Vector_Max(M, nm, &maxIndex);                                    //Encuentra el valor maximo del vector R
          i1b = maxIndex;                                                        //Asigna el subindice del valor maximo a la variable i1a
          i1a = 0;
 
-         while (vectorEnvolvente[i1a]<yy1){
+         while (M[i1a]<yy1){
                i1a++;
          }
 
@@ -402,8 +507,8 @@ void GenerarPulso(){
          i0 = i1 - dix;
          i2 = i1 + dix;
 
-         yy0 = vectorEnvolvente[i0];
-         yy2 = vectorEnvolvente[i2];
+         yy0 = M[i0];
+         yy2 = M[i2];
 
          yf0 = (float)(yy0);
          yf1 = (float)(yy1);
@@ -421,9 +526,66 @@ void GenerarPulso(){
 
 }
 
+int CalcularModa(int VRpt[nd]){
+
+     ME1=0;
+     ME2=0;
+     ME3=0;
+     Mb2=0;
+     Mb3=0;
+     Mc1=0;
+     Mc2=0;
+     Mc3=0;
+
+     ME1=VRpt[0];
+
+     for (mi=0;mi<nd;mi++){
+          if (VRpt[mi]==ME1){
+               Mc1++;
+          }else{
+               if (Mb2==0){
+                    ME2=VRpt[mi];
+                    Mb2=1;
+               }
+               if (VRpt[mi]==ME2){
+                    Mc2++;
+               }else{
+                    if (Mb3==0){
+                         ME3=VRpt[mi];
+                         Mb3=1;
+                    }
+                    if (VRpt[mi]==ME3){
+                         Mc3++;
+                    }
+               }
+          }
+
+     }
+
+     if ((Mc1>Mc2)&&(Mc1>Mc3)){
+          return ME1;
+     }
+     if ((Mc2>Mc1)&&(Mc2>Mc3)){
+          return ME2;
+     }
+     if ((Mc3>Mc1)&&(Mc3>Mc2)){
+          return ME3;
+     }
+     if (Mc1==Mc2){
+          return ME1;
+     }
+     if (Mc1==Mc3){
+          return ME1;
+     }
+     if (Mc2==Mc3){
+          return ME2;
+     }
+
+}
+
 //*****************************************************************************************************************************************
-//Funcion para el calculo del T2
-float CalcularT2(){
+//Funcion para el calculo de la Distancia
+int CalcularDistancia(){
 
      conts = 0;                                                                 //Limpia el contador de secuencias
      T2sum = 0.0;
@@ -443,34 +605,38 @@ float CalcularT2(){
 
      T2prom = T2sum/Nsm;
 
-     return T2prom;
-
-}
-
-//*****************************************************************************************************************************************
-//Funcion para enviar la trama de datos tipo int:
-void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
-
-     //Variables:
-     unsigned short tramaShort[numeroMuestras*2];
-     unsigned int valorInt;
-     unsigned short *ptrValorInt;
-     //Asignacion de punteros:
-     ptrValorInt = (unsigned short *) & valorInt;
-     
-     //Convierte el vector de enteros en un vector de short:
-     for (j=0;j<numeroMuestras;j++){
-          valorInt = tramaInt[j];
-          tramaShort[j*2] = *(ptrValorInt);
-          tramaShort[(j*2)+1] = *(ptrValorInt+1);
+     //Calcula la velocidad del sonido:
+     vSonido = CalcularVelocidadSonido();
+     //Calcula el TOF en seg:
+     TOF = (T1+T2prom-T2adj)/1.0e6;                                             //TOF = TO + T1 + Tp - k (pag82)
+     //Calcula la distancia en mm:
+     Dst = (vSonido*TOF/2.0) * 1000.0;
+     doub = modf(Dst, &iptr);                                                   //Ejemplo: doub = modf(6.25, &iptr) => doub = 0.25, iptr = 6.00
+     if (doub>=0.5){
+        Dst=ceil(Dst);                                                          //Redondea al inmediato superior
+     }else{
+        Dst=floor(Dst);                                                         //Redondea al inmediato inferior
      }
-     
-     //Actualiza la cabecera y envia la trama por RS485:
-     //cabecera[3] = numeroMuestras*2;                                                  //Actualiza el numero de datos de la cabecera
-     //EnviarTramaRS485(1, cabecera, tramaShort);
+
+     return Dst;
 
 }
+//*****************************************************************************************************************************************
+//Funcion para estimar la distancia en base a multiples mediciones
+void AproximarDistancia(){
 
+     //TEST = 1;
+
+     for (vi=0;vi<nd;vi++){
+         Vdistancia[vi] = CalcularDistancia();                                  //Toma 10 lecturas de la distancia calculada y las almacena en un vector
+     }
+
+     distanciaEstimada = CalcularModa(Vdistancia);                              //Calcula la Moda del vector de distancias
+     distanciaEstimada = distanciaEstimada + Kadj;                              //Ajusta el valor de la Distancia calculada segun el factor de calibracion Kadj
+
+     //TEST = 0;
+
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -480,8 +646,8 @@ void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
 void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
      SAMP_bit = 0;                                 //Limpia el bit SAMP para iniciar la conversion del ADC
      while (!AD1CON1bits.DONE);                    //Espera hasta que se complete la conversion
-     if (i<numeroMuestras){
-        vectorMuestreo[i] = ADC1BUF0;                           //Almacena el valor actual de la conversion del ADC en el vector M
+     if (i<nm){
+        M[i] = ADC1BUF0;                           //Almacena el valor actual de la conversion del ADC en el vector M
         i++;                                       //Aumenta en 1 el subindice del vector de Muestras
      } else {
         bm = 1;                                    //Cambia el valor de la bandera bm para terminar con el muestreo y dar comienzo al procesamiento de la señal
@@ -493,18 +659,18 @@ void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
 //Interrupcion por desbordamiento del TMR2:
 void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
 
-     if (contPulsos<10){                                //Controla el numero total de pulsos de exitacion del transductor ultrasonico. (
+     if (contp<10){                                //Controla el numero total de pulsos de exitacion del transductor ultrasonico. (
           RB2_bit = ~RB2_bit;                      //Conmuta el valor del pin RB14
      }else {
           RB2_bit = 0;                             //Pone a cero despues de enviar todos los pulsos de exitacion.
-          if (contPulsos==110){
+          if (contp==110){
               T2CON.TON = 0;                       //Apaga el TMR2
               TMR1 = 0;                            //Encera el TMR1
               T1CON.TON = 1;                       //Enciende el TMR1
               //bm=0;
           }
      }
-     contPulsos++;                                      //Aumenta el contador en una unidad.
+     contp++;                                      //Aumenta el contador en una unidad.
      T2IF_bit = 0;                                 //Limpia la bandera de interrupcion por desbordamiento del TMR2
      /*
      TEST = 0;  //*****

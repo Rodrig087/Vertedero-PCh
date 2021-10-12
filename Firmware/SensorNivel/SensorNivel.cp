@@ -38,7 +38,7 @@ void EnviarTramaRS485(unsigned short puertoUART, unsigned char *cabecera, unsign
  }
 
 }
-#line 36 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 34 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
 const float h[]=
 {
 0,
@@ -82,46 +82,20 @@ unsigned char respuestaPyloadRS485[15];
 unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  3 };
 
 
-const short Psize = 6;
-const short Rsize = 6;
-const short Hdr = 0x3A;
-const short End = 0x0D;
-unsigned char Ptcn[Psize];
-unsigned char Rspt[Rsize];
 unsigned short ir, ip, ipp;
-unsigned short BanP, BanT;
-unsigned short Fcn;
-unsigned int DatoPtcn;
-unsigned short Dato;
-unsigned int Altura;
-unsigned int Nivel;
-float FNivel, FCaudal;
-unsigned int TemperaturaInt, Caudal, ITOF;
-int Kadj;
-unsigned char *chTemp, *chCaudal, *chNivel,
-*chKadj, *chTOF, *chAltura;
-float FDReal;
-unsigned int IT2prom;
-unsigned char *chT2prom;
-float doub;
-float *iptr;
-short num;
 
 
-float vSonido;
+unsigned int contPulsos;
 
 
-unsigned int contp;
-
-
-const unsigned int nm = 350;
-unsigned int M[nm];
+const unsigned int numeroMuestras = 350;
+unsigned int vectorMuestreo[numeroMuestras];
+unsigned int vectorEnvolvente[numeroMuestras];
 unsigned int k;
 short bm;
 
 
-unsigned int value = 0;
-unsigned int aux_value = 0;
+unsigned int valorAbsoluto;
 
 
 float x0=0, x1=0, x2=0, y0=0, y1=0, y2=0;
@@ -148,25 +122,17 @@ float nx, dx, tmax;
 
 short conts;
 float T2a, T2b;
-const short Nsm=3;
+const short Nsm=30;
 const float T2umb = 3.0;
 const float T1 = 1375.0;
 float T2adj;
 float T2sum,T2prom;
-float T2, TOF, Dst;
-unsigned int IDst;
-unsigned char *chIDst;
-long TT2;
-unsigned char *chTT2;
-unsigned int distanciaEstimada;
-unsigned int Vdistancia[10];
+float T2, TOF;
 
 
-unsigned int ME1=0, ME2=0, ME3=0;
-unsigned short Mb2=0, Mb3=0;
-unsigned short Mc1=0, Mc2=0, Mc3=0;
-unsigned short mi=0, vi=0;
-const short nd = 10;
+
+
+
 
 
 
@@ -174,12 +140,9 @@ const short nd = 10;
 void ConfiguracionPrincipal();
 void ProcesarSolicitud(unsigned char, unsigned char);
 int LeerDS18B20();
-float LeerTemperatura();
-float CalcularVelocidadSonido();
 void GenerarPulso();
-int CalcularModa(int);
-int CalcularDistancia();
-void AproximarDistancia();
+float CalcularT2();
+EnviarTramaInt(unsigned char*, unsigned char*);
 
 
 
@@ -195,7 +158,7 @@ void main() {
  j = 0;
  x = 0;
  y = 0;
- distanciaEstimada = 0;
+
  T2 = 0;
  bm = 0;
 
@@ -207,9 +170,6 @@ void main() {
 
  TEST = 0;
 
- T2adj = 460.0;
- Kadj = 0;
- Altura = 275;
 
  ip=0;
 
@@ -318,8 +278,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  switch (funcionRS485){
  case 1:
 
- AproximarDistancia();
-
+ CalcularT2();
  break;
  case 2:
 
@@ -327,7 +286,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  switch (subFuncionRS485){
  case 1:
 
- datoInt = distanciaEstimada;
+
  respuestaPyloadRS485[0] = *(ptrDatoInt);
  respuestaPyloadRS485[1] = *(ptrDatoInt+1);
  cabeceraSolicitud[3] = 2;
@@ -335,7 +294,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  break;
  case 2:
 
- datoInt= LeerDS18B20();
+
  respuestaPyloadRS485[0] = *(ptrDatoInt);
  respuestaPyloadRS485[1] = *(ptrDatoInt+1);
  cabeceraSolicitud[3] = 2;
@@ -343,34 +302,13 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  break;
  case 3:
 
- datoInt = Altura;
- respuestaPyloadRS485[0] = *(ptrDatoInt);
- respuestaPyloadRS485[1] = *(ptrDatoInt+1);
- cabeceraSolicitud[3] = 2;
- EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
+
  break;
  case 4:
 
 
- datoFloat = LeerTemperatura();
- respuestaPyloadRS485[0] = *(ptrDatoFloat);
- respuestaPyloadRS485[1] = *(ptrDatoFloat+1);
- respuestaPyloadRS485[2] = *(ptrDatoFloat+2);
- respuestaPyloadRS485[3] = *(ptrDatoFloat+3);
- cabeceraSolicitud[3] = 4;
- EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
- break;
- case 5:
-
- datoShort = Kadj;
- respuestaPyloadRS485[0] = datoShort;
- cabeceraSolicitud[3] = 1;
- EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
  break;
  }
- case 3:
-
-
  break;
  case 4:
 
@@ -412,55 +350,13 @@ int LeerDS18B20(){
 
 
 
-float LeerTemperatura(){
-
- unsigned int temperaturaCrudo, temperaturaInt;
- float temperaturaDec, temperaturaResultado;
-
-
- Ow_Reset(&PORTA, 0);
- Ow_Write(&PORTA, 0, 0xCC);
- Ow_Write(&PORTA, 0, 0x44);
- Delay_us(120);
- Ow_Reset(&PORTA, 0);
- Ow_Write(&PORTA, 0, 0xCC);
- Ow_Write(&PORTA, 0, 0xBE);
- Delay_ms(400);
- temperaturaCrudo = Ow_Read(&PORTA, 0);
- temperaturaCrudo = (Ow_Read(&PORTA, 0) << 8) + temperaturaCrudo;
-
-
-
- temperaturaInt = temperaturaCrudo >> 4;
-
- temperaturaDec = ((temperaturaCrudo & 0x000F) * 625)/10000.0;
-
- temperaturaResultado = temperaturaInt + temperaturaDec;
-
- return temperaturaResultado;
-
-}
-
-
-
-float CalcularVelocidadSonido(){
-
- float temperatura_Float, vSonido;
- temperatura_Float = LeerTemperatura();
- vSonido = 331.45 * sqrt(1+(temperatura_Float/273));
- return vSonido;
-
-}
-
-
-
 void GenerarPulso(){
 
  TEST = 1;
 
 
  bm = 0;
- contp = 0;
+ contPulsos = 0;
  RB2_bit = 0;
  T1CON.TON = 0;
  TMR2 = 0;
@@ -472,30 +368,26 @@ void GenerarPulso(){
  if (bm==1){
 
 
-
-
-
  Mmed = 508;
 
+ for (k=0;k<numeroMuestras;k++){
 
- for (k=0;k<nm;k++){
 
-
- value = M[k]-Mmed;
- if (M[k]<Mmed){
- value = (M[k]+((Mmed-M[k])*2))-(Mmed);
+ valorAbsoluto = vectorMuestreo[k]-Mmed;
+ if (vectorMuestreo[k]<Mmed){
+ valorAbsoluto = (vectorMuestreo[k]+((Mmed-vectorMuestreo[k])*2))-(Mmed);
  }
 
 
 
  for( f=O-1; f!=0; f-- ) XFIR[f]=XFIR[f-1];
 
- XFIR[0] = (float)(value);
+ XFIR[0] = (float)(valorAbsoluto);
 
  y0 = 0.0; for( f=0; f<O; f++ ) y0 += h[f]*XFIR[f];
 
  YY = (unsigned int)(y0);
- M[k] = YY;
+ vectorEnvolvente[k] = YY;
 
  }
 
@@ -506,11 +398,11 @@ void GenerarPulso(){
 
  if (bm==2){
 
- yy1 = Vector_Max(M, nm, &maxIndex);
+ yy1 = Vector_Max(vectorEnvolvente, numeroMuestras, &maxIndex);
  i1b = maxIndex;
  i1a = 0;
 
- while (M[i1a]<yy1){
+ while (vectorEnvolvente[i1a]<yy1){
  i1a++;
  }
 
@@ -518,8 +410,8 @@ void GenerarPulso(){
  i0 = i1 - dix;
  i2 = i1 + dix;
 
- yy0 = M[i0];
- yy2 = M[i2];
+ yy0 = vectorEnvolvente[i0];
+ yy2 = vectorEnvolvente[i2];
 
  yf0 = (float)(yy0);
  yf1 = (float)(yy1);
@@ -537,66 +429,9 @@ void GenerarPulso(){
 
 }
 
-int CalcularModa(int VRpt[nd]){
-
- ME1=0;
- ME2=0;
- ME3=0;
- Mb2=0;
- Mb3=0;
- Mc1=0;
- Mc2=0;
- Mc3=0;
-
- ME1=VRpt[0];
-
- for (mi=0;mi<nd;mi++){
- if (VRpt[mi]==ME1){
- Mc1++;
- }else{
- if (Mb2==0){
- ME2=VRpt[mi];
- Mb2=1;
- }
- if (VRpt[mi]==ME2){
- Mc2++;
- }else{
- if (Mb3==0){
- ME3=VRpt[mi];
- Mb3=1;
- }
- if (VRpt[mi]==ME3){
- Mc3++;
- }
- }
- }
-
- }
-
- if ((Mc1>Mc2)&&(Mc1>Mc3)){
- return ME1;
- }
- if ((Mc2>Mc1)&&(Mc2>Mc3)){
- return ME2;
- }
- if ((Mc3>Mc1)&&(Mc3>Mc2)){
- return ME3;
- }
- if (Mc1==Mc2){
- return ME1;
- }
- if (Mc1==Mc3){
- return ME1;
- }
- if (Mc2==Mc3){
- return ME2;
- }
-
-}
 
 
-
-int CalcularDistancia(){
+float CalcularT2(){
 
  conts = 0;
  T2sum = 0.0;
@@ -616,38 +451,34 @@ int CalcularDistancia(){
 
  T2prom = T2sum/Nsm;
 
-
- vSonido = CalcularVelocidadSonido();
-
- TOF = (T1+T2prom-T2adj)/1.0e6;
-
- Dst = (vSonido*TOF/2.0) * 1000.0;
- doub = modf(Dst, &iptr);
- if (doub>=0.5){
- Dst=ceil(Dst);
- }else{
- Dst=floor(Dst);
- }
-
- return Dst;
+ return T2prom;
 
 }
 
 
-void AproximarDistancia(){
+
+void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
 
 
+ unsigned short tramaShort[numeroMuestras*2];
+ unsigned int valorInt;
+ unsigned short *ptrValorInt;
 
- for (vi=0;vi<nd;vi++){
- Vdistancia[vi] = CalcularDistancia();
+ ptrValorInt = (unsigned short *) & valorInt;
+
+
+ for (j=0;j<numeroMuestras;j++){
+ valorInt = tramaInt[j];
+ tramaShort[j*2] = *(ptrValorInt);
+ tramaShort[(j*2)+1] = *(ptrValorInt+1);
  }
 
- distanciaEstimada = CalcularModa(Vdistancia);
- distanciaEstimada = distanciaEstimada + Kadj;
 
 
+ EnviarTramaRS485(1, cabecera, tramaShort);
 
 }
+
 
 
 
@@ -657,8 +488,8 @@ void AproximarDistancia(){
 void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
  SAMP_bit = 0;
  while (!AD1CON1bits.DONE);
- if (i<nm){
- M[i] = ADC1BUF0;
+ if (i<numeroMuestras){
+ vectorMuestreo[i] = ADC1BUF0;
  i++;
  } else {
  bm = 1;
@@ -670,20 +501,20 @@ void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
 
 void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
 
- if (contp<10){
+ if (contPulsos<10){
  RB2_bit = ~RB2_bit;
  }else {
  RB2_bit = 0;
- if (contp==110){
+ if (contPulsos==110){
  T2CON.TON = 0;
  TMR1 = 0;
  T1CON.TON = 1;
 
  }
  }
- contp++;
+ contPulsos++;
  T2IF_bit = 0;
-#line 685 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 514 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
 }
 
 
