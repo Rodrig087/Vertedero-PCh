@@ -7,18 +7,30 @@ extern sfr sbit MSRS485_Direction;
 
 
 
-void EnviarTramaRS485(unsigned short puertoUART, unsigned char *cabecera, unsigned char *payload){
+void EnviarTramaRS485(unsigned char puertoUART, unsigned char *cabecera, unsigned char *payload){
 
- unsigned short direccion;
- unsigned short funcion;
- unsigned short subfuncion;
- unsigned short numDatos;
- unsigned short iDatos;
+ unsigned char direccion;
+ unsigned char funcion;
+ unsigned char subfuncion;
+ unsigned char lsbNumDatos;
+ unsigned char msbNumDatos;
+ unsigned int iDatos;
+
+
+ unsigned int numDatos;
+ unsigned char *ptrnumDatos;
+ ptrnumDatos = (unsigned char *) & numDatos;
+
 
  direccion = cabecera[0];
  funcion = cabecera[1];
  subfuncion = cabecera[2];
- numDatos = cabecera[3];
+ lsbNumDatos = cabecera[3];
+ msbNumDatos = cabecera[4];
+
+
+ *(ptrnumDatos) = lsbNumDatos;
+ *(ptrnumDatos+1) = msbNumDatos;
 
  if (puertoUART == 1){
  MSRS485 = 1;
@@ -26,7 +38,8 @@ void EnviarTramaRS485(unsigned short puertoUART, unsigned char *cabecera, unsign
  UART1_Write(direccion);
  UART1_Write(funcion);
  UART1_Write(subfuncion);
- UART1_Write(numDatos);
+ UART1_Write(lsbNumDatos);
+ UART1_Write(msbNumDatos);
  for (iDatos=0;iDatos<numDatos;iDatos++){
  UART1_Write(payload[iDatos]);
  }
@@ -73,33 +86,35 @@ sbit TEST_Direction at TRISA4_bit;
 unsigned int i, j, x, y;
 
 
-unsigned short banRSI, banRSC;
+unsigned char banRSI, banRSC;
 unsigned char byteRS485;
 unsigned int i_rs485;
 unsigned char solicitudCabeceraRS485[5];
 unsigned char solicitudPyloadRS485[15];
 unsigned char respuestaPyloadRS485[15];
+unsigned char direccionRS485, funcionRS485, subFuncionRS485;
+unsigned int numDatosRS485;
+unsigned char *ptrNumDatosRS485;
 unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  3 };
 
-
-unsigned short ir, ip, ipp;
+unsigned char ir, ip, ipp;
 
 
 unsigned int contPulsos;
 
 
 const unsigned int numeroMuestras = 350;
-unsigned int vectorMuestreo[numeroMuestras];
-unsigned int vectorEnvolvente[numeroMuestras];
+unsigned int vectorMuestras[350];
+
 unsigned int k;
-short bm;
+char bm;
 
 
 unsigned int valorAbsoluto;
 
 
 float x0=0, x1=0, x2=0, y0=0, y1=0, y2=0;
-const unsigned short O = 21;
+const unsigned char O = 21;
 float XFIR[O];
 unsigned int f;
 unsigned int YY = 0;
@@ -113,24 +128,22 @@ unsigned int MIndexMin;
 unsigned int maxIndex;
 unsigned int i0, i1, i2, imax;
 unsigned int i1a, i1b;
-const short dix=20;
+const char dix=20;
 const float tx=5.0;
 int yy0, yy1, yy2;
 float yf0, yf1, yf2;
 float nx, dx, tmax;
 
 
-short conts;
+char conts;
 float T2a, T2b;
-const short Nsm=30;
+const char Nsm=30;
 const float T2umb = 3.0;
-const float T1 = 1375.0;
+float T1 = 1375.0;
 float T2adj;
 float T2sum,T2prom;
 float T2, TOF;
-
-
-
+unsigned int temperaturaRaw;
 
 
 
@@ -138,11 +151,12 @@ float T2, TOF;
 
 
 void ConfiguracionPrincipal();
-void ProcesarSolicitud(unsigned char, unsigned char);
-int LeerDS18B20();
+void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadSolicitud);
+unsigned int LeerDS18B20();
 void GenerarPulso();
-float CalcularT2();
-EnviarTramaInt(unsigned char*, unsigned char*);
+float CalcularTOF();
+void GenerarTramaPrueba(unsigned int numDatosPrueba, unsigned char *cabeceraPrueba);
+void EnviarTramaInt(unsigned char*, unsigned char*);
 
 
 
@@ -159,17 +173,26 @@ void main() {
  x = 0;
  y = 0;
 
+
  T2 = 0;
  bm = 0;
+ TOF = 0;
+ temperaturaRaw = 0;
 
  banRSI = 0;
  banRSC = 0;
  byteRS485 = 0;
  i_rs485 = 0;
+ funcionRS485 = 0;
+ subFuncionRS485 = 0;
+ numDatosRS485 = 0;
+ ptrNumDatosRS485 = (unsigned char *) & numDatosRS485;
  MSRS485 = 0;
 
- TEST = 0;
 
+
+
+ TEST = 0;
 
  ip=0;
 
@@ -255,30 +278,33 @@ void ConfiguracionPrincipal(){
 }
 
 
+
+
 void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadSolicitud){
 
 
- unsigned short funcionRS485, subFuncionRS485, numDatosRS485;
- unsigned short datoShort;
- unsigned int datoInt;
+ unsigned char funcionSolicitud, subFuncionSolicitud;
+ unsigned char datoShort;
+ unsigned int datoInt, numDatosResp;
  float datoFloat;
- unsigned short *ptrDatoInt, *ptrDatoFloat;
+ unsigned char *ptrDatoInt, *ptrDatoFloat, *ptrNumDatosResp;
 
 
- ptrDatoInt = (unsigned short *) & datoInt;
- ptrDatoFloat = (unsigned short *) & datoFloat;
+ ptrNumDatosResp = (unsigned char *) & numDatosResp;
+ ptrDatoInt = (unsigned char *) & datoInt;
+ ptrDatoFloat = (unsigned char *) & datoFloat;
 
 
- funcionRS485 = cabeceraSolicitud[1];
- subFuncionRS485 = cabeceraSolicitud[2];
- numDatosRS485 = cabeceraSolicitud[3];
+ funcionSolicitud = cabeceraSolicitud[1];
+ subFuncionSolicitud = cabeceraSolicitud[2];
 
 
 
- switch (funcionRS485){
+ switch (funcionSolicitud){
  case 1:
 
- CalcularT2();
+ temperaturaRaw = LeerDS18B20();
+ TOF = CalcularTOF();
  break;
  case 2:
 
@@ -287,42 +313,91 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  case 1:
 
 
- respuestaPyloadRS485[0] = *(ptrDatoInt);
- respuestaPyloadRS485[1] = *(ptrDatoInt+1);
- cabeceraSolicitud[3] = 2;
+ datoInt = temperaturaRaw;
+ datoFloat = TOF;
+ respuestaPyloadRS485[0] = *(ptrDatoFloat);
+ respuestaPyloadRS485[1] = *(ptrDatoFloat+1);
+ respuestaPyloadRS485[2] = *(ptrDatoFloat+2);
+ respuestaPyloadRS485[3] = *(ptrDatoFloat+3);
+ respuestaPyloadRS485[4] = *(ptrDatoInt);
+ respuestaPyloadRS485[5] = *(ptrDatoInt+1);
+
+ numDatosResp = 6;
+ cabeceraSolicitud[3] = *(ptrNumDatosResp);
+ cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
  EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
  break;
  case 2:
 
 
- respuestaPyloadRS485[0] = *(ptrDatoInt);
- respuestaPyloadRS485[1] = *(ptrDatoInt+1);
- cabeceraSolicitud[3] = 2;
- EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
+ numDatosResp = 700;
+ cabeceraSolicitud[3] = *(ptrNumDatosResp);
+ cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
+ EnviarTramaInt(cabeceraSolicitud,vectorMuestras);
+ break;
+ case 3:
+
+ numDatosResp = 700;
+ cabeceraSolicitud[3] = *(ptrNumDatosResp);
+ cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
+ EnviarTramaInt(cabeceraSolicitud,vectorMuestras);
+ break;
+ }
+ break;
+ case 4:
+
+ switch (subFuncionSolicitud){
+ case 2:
+
+
+ numDatosResp = 10;
+ cabeceraSolicitud[3] = *(ptrNumDatosResp);
+ cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
+ EnviarTramaRS485(1, cabeceraSolicitud, tramaPruebaRS485);
  break;
  case 3:
 
 
- break;
- case 4:
-
+ numDatosResp = 512;
+ cabeceraSolicitud[3] = *(ptrNumDatosResp);
+ cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
+ TEST = ~TEST;
+ GenerarTramaPrueba(numDatosResp, cabeceraSolicitud);
 
  break;
  }
  break;
- case 4:
-
- cabeceraSolicitud[3] = 10;
- EnviarTramaRS485(1, cabeceraSolicitud, tramaPruebaRS485);
- break;
  }
+
+}
+
+
+
+
+void GenerarTramaPrueba(unsigned int numDatosPrueba, unsigned char *cabeceraPrueba){
+
+ unsigned int contadorMuestras = 0;
+ unsigned char outputPyloadRS485[515];
+
+
+ for (j=0;j<numDatosPrueba;j++){
+ outputPyloadRS485[j] = contadorMuestras;
+ contadorMuestras++;
+ if (contadorMuestras>255) {
+ contadorMuestras = 0;
+ }
+ }
+
+ EnviarTramaRS485(1, cabeceraPrueba, outputPyloadRS485);
+
 
 
 }
 
 
 
-int LeerDS18B20(){
+
+unsigned int LeerDS18B20(){
 
  unsigned int temperaturaCrudo;
  unsigned temp;
@@ -373,9 +448,9 @@ void GenerarPulso(){
  for (k=0;k<numeroMuestras;k++){
 
 
- valorAbsoluto = vectorMuestreo[k]-Mmed;
- if (vectorMuestreo[k]<Mmed){
- valorAbsoluto = (vectorMuestreo[k]+((Mmed-vectorMuestreo[k])*2))-(Mmed);
+ valorAbsoluto = vectorMuestras[k]-Mmed;
+ if (vectorMuestras[k]<Mmed){
+ valorAbsoluto = (vectorMuestras[k]+((Mmed-vectorMuestras[k])*2))-(Mmed);
  }
 
 
@@ -387,7 +462,7 @@ void GenerarPulso(){
  y0 = 0.0; for( f=0; f<O; f++ ) y0 += h[f]*XFIR[f];
 
  YY = (unsigned int)(y0);
- vectorEnvolvente[k] = YY;
+ vectorMuestras[k] = YY;
 
  }
 
@@ -398,11 +473,11 @@ void GenerarPulso(){
 
  if (bm==2){
 
- yy1 = Vector_Max(vectorEnvolvente, numeroMuestras, &maxIndex);
+ yy1 = Vector_Max(vectorMuestras, numeroMuestras, &maxIndex);
  i1b = maxIndex;
  i1a = 0;
 
- while (vectorEnvolvente[i1a]<yy1){
+ while (vectorMuestras[i1a]<yy1){
  i1a++;
  }
 
@@ -410,8 +485,8 @@ void GenerarPulso(){
  i0 = i1 - dix;
  i2 = i1 + dix;
 
- yy0 = vectorEnvolvente[i0];
- yy2 = vectorEnvolvente[i2];
+ yy0 = vectorMuestras[i0];
+ yy2 = vectorMuestras[i2];
 
  yf0 = (float)(yy0);
  yf1 = (float)(yy1);
@@ -431,7 +506,7 @@ void GenerarPulso(){
 
 
 
-float CalcularT2(){
+float CalcularTOF(){
 
  conts = 0;
  T2sum = 0.0;
@@ -460,11 +535,11 @@ float CalcularT2(){
 void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
 
 
- unsigned short tramaShort[numeroMuestras*2];
+ unsigned char tramaShort[numeroMuestras*2];
  unsigned int valorInt;
- unsigned short *ptrValorInt;
+ unsigned char *ptrValorInt;
 
- ptrValorInt = (unsigned short *) & valorInt;
+ ptrValorInt = (unsigned char *) & valorInt;
 
 
  for (j=0;j<numeroMuestras;j++){
@@ -489,7 +564,7 @@ void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
  SAMP_bit = 0;
  while (!AD1CON1bits.DONE);
  if (i<numeroMuestras){
- vectorMuestreo[i] = ADC1BUF0;
+ vectorMuestras[i] = ADC1BUF0;
  i++;
  } else {
  bm = 1;
@@ -514,7 +589,7 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
  }
  contPulsos++;
  T2IF_bit = 0;
-#line 514 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 576 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
 }
 
 
@@ -526,7 +601,7 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
 
  if (banRSI==2){
 
- if (i_rs485<(solicitudCabeceraRS485[3])){
+ if (i_rs485<(numDatosRS485)){
  solicitudPyloadRS485[i_rs485] = byteRS485;
  i_rs485++;
  } else {
@@ -540,16 +615,18 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
  if (byteRS485==0x3A){
  banRSI = 1;
  i_rs485 = 0;
-
  }
  }
- if ((banRSI==1)&&(byteRS485!=0x3A)&&(i_rs485<4)){
+ if ((banRSI==1)&&(byteRS485!=0x3A)&&(i_rs485<5)){
  solicitudCabeceraRS485[i_rs485] = byteRS485;
  i_rs485++;
  }
- if ((banRSI==1)&&(i_rs485==4)){
+ if ((banRSI==1)&&(i_rs485==5)){
 
  if ((solicitudCabeceraRS485[0]== 3 )||(solicitudCabeceraRS485[0]==255)){
+
+ *(ptrNumDatosRS485) = solicitudCabeceraRS485[3];
+ *(ptrNumDatosRS485+1) = solicitudCabeceraRS485[4];
  i_rs485 = 0;
  banRSI = 2;
  } else {

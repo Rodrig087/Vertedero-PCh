@@ -10,7 +10,18 @@ main
 UART1Interrupt
 	UART1_Read
 	ProcesarSolicitud
-		CalcularT2
+		LeerDS18B20
+			Ow_Reset
+				Delay_500us
+				Delay_80us
+			Ow_Write
+				Delay_80us
+				Delay_1us
+				Delay_50us
+			Ow_Read
+				Delay_1us
+				Delay_50us
+		CalcularTOF
 			GenerarPulso
 				Vector_Max
 				_Long2Float
@@ -28,5 +39,9 @@ UART1Interrupt
 		EnviarTramaRS485
 			UART1_Write
 			UART1_Tx_Idle
+		EnviarTramaInt
+			EnviarTramaRS485
+		GenerarTramaPrueba
+			EnviarTramaRS485
 Timer2Interrupt
 Timer1Interrupt

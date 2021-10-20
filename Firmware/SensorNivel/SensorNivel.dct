@@ -1106,7 +1106,7 @@ bytetostr
 c
 c
 c_bit
-calculart2
+calculartof
 ceid
 ceid
 ceid
@@ -1456,6 +1456,7 @@ dflt1con
 dflt1conbits
 dfltcon
 dfltconbits
+direccionrs485
 disi
 disi
 disi_bit
@@ -1944,6 +1945,7 @@ frmen_bit
 frmpol
 frmpol
 frmpol_bit
+funcionrs485
 gcen
 gcen
 gcen
@@ -1953,6 +1955,7 @@ gcstat
 gcstat
 gcstat_bit
 generarpulso
+generartramaprueba
 get_fosc_khz
 get_fosc_per_cyc
 h
@@ -2996,6 +2999,7 @@ nsm
 nstdis
 nstdis
 nstdis_bit
+numdatosrs485
 numeromuestras
 nvmcon
 nvmconbits
@@ -4067,6 +4071,7 @@ ptper_9_bit
 ptper_9_p1tper_bit
 ptper_9_p2tper_bit
 ptperbits
+ptrnumdatosrs485
 ptsidl
 ptsidl
 ptsidl
@@ -5234,6 +5239,7 @@ strtok
 stsel
 stsel
 stsel_bit
+subfuncionrs485
 swdten
 swdten
 swdten_bit
@@ -5403,6 +5409,7 @@ tcs_bit
 tcs_t1con_bit
 tcs_t2con_bit
 tcs_t3con_bit
+temperaturaraw
 test
 test_direction
 tgate
@@ -5964,8 +5971,7 @@ vector_multiply
 vector_negate
 vector_set
 vector_subtract
-vectorenvolvente
-vectormuestreo
+vectormuestras
 vectorpower
 vectorscale
 vregs

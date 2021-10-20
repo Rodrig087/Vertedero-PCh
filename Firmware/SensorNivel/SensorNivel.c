@@ -65,33 +65,35 @@ sbit TEST_Direction at TRISA4_bit;
 unsigned int i, j, x, y;
 
 //Variables para la comunicacion RS485:
-unsigned short banRSI, banRSC;                                                  //Banderas de control de inicio de trama y trama completa
+unsigned char banRSI, banRSC;                                                  //Banderas de control de inicio de trama y trama completa
 unsigned char byteRS485;
 unsigned int i_rs485;                                                           //Subindice
 unsigned char solicitudCabeceraRS485[5];                                        //Vector para almacenar los datos de cabecera de la trama RS485: [0x3A, Direccion, Funcion, NumeroDatos]
 unsigned char solicitudPyloadRS485[15];                                         //Vector para almacenar el pyload de la trama RS485 recibida
 unsigned char respuestaPyloadRS485[15];                                         //Vector para almacenar el pyload de la trama RS485 a enviar
+unsigned char direccionRS485, funcionRS485, subFuncionRS485;
+unsigned int numDatosRS485;
+unsigned char *ptrNumDatosRS485;
 unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, IDNODO};   //Trama de 10 elementos para probar la comunicacion RS485
-
 //Variables para la peticion y respuesta de datos:
-unsigned short ir, ip, ipp;                             //Subindices para las tramas de peticion y respuesta
+unsigned char ir, ip, ipp;                             //Subindices para las tramas de peticion y respuesta
 
 //Variables para la generacion de pulsos de exitacion del transductor ultrasonico
 unsigned int contPulsos;
 
 //Variables para el almacenamiento de la señal muestreada:
 const unsigned int numeroMuestras = 350;
-unsigned int vectorMuestreo[numeroMuestras];
-unsigned int vectorEnvolvente[numeroMuestras];
+unsigned int vectorMuestras[350];
+//unsigned char outputPyloadRS485[400];
 unsigned int k;
-short bm;
+char bm;
 
 //Variables para la deteccion de la Envolvente de la señal
 unsigned int valorAbsoluto;
 
 //Variables para el filtrado de la señal
 float x0=0, x1=0, x2=0, y0=0, y1=0, y2=0;
-const unsigned short O = 21;
+const unsigned char O = 21;
 float XFIR[O];
 unsigned int f;
 unsigned int YY = 0;
@@ -105,24 +107,22 @@ unsigned int MIndexMin;
 unsigned int maxIndex;
 unsigned int i0, i1, i2, imax;
 unsigned int i1a, i1b;
-const short dix=20;                                     //Intervalo de interpolacion
+const char dix=20;                                     //Intervalo de interpolacion
 const float tx=5.0;                                     //Periodo de muestreo
 int yy0, yy1, yy2;
 float yf0, yf1, yf2;
 float nx, dx, tmax;
 
 //Variables para calcular la Distancia
-short conts;
+char conts;
 float T2a, T2b;
-const short Nsm=30;                                     //Numero maximo de secuencias de medicion (3)
+const char Nsm=30;                                     //Numero maximo de secuencias de medicion (3)
 const float T2umb = 3.0;                                //Umbral para precision (3us)
-const float T1 = 1375.0;                                //T0+T1. Altura minima de instalacion = 250 mm
+float T1 = 1375.0;                                //T0+T1. Altura minima de instalacion = 250 mm
 float T2adj;                                            //Variable para la calibracion de T2
 float T2sum,T2prom;
 float T2, TOF;
-
-
-
+unsigned int temperaturaRaw;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,11 +130,12 @@ float T2, TOF;
 
 /////////////////////////////////////////////////////////  Declaracion de funciones  /////////////////////////////////////////////////////////
 void ConfiguracionPrincipal();
-void ProcesarSolicitud(unsigned char, unsigned char);
-int LeerDS18B20();
+void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadSolicitud);
+unsigned int LeerDS18B20();
 void GenerarPulso();
-float CalcularT2();
-EnviarTramaInt(unsigned char*, unsigned char*);
+float CalcularTOF();
+void GenerarTramaPrueba(unsigned int numDatosPrueba, unsigned char *cabeceraPrueba);
+void EnviarTramaInt(unsigned char*, unsigned char*);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -151,17 +152,26 @@ void main() {
      x = 0;
      y = 0;
 
-     T2 = 0;
+     //Calculos:
+         T2 = 0;
      bm = 0;
+         TOF = 0;
+         temperaturaRaw = 0;
      //Comunicacion RS485:
      banRSI = 0;
      banRSC = 0;
      byteRS485 = 0;
      i_rs485 = 0;
+     funcionRS485 = 0;
+     subFuncionRS485 = 0;
+     numDatosRS485 = 0;
+     ptrNumDatosRS485 = (unsigned char *) & numDatosRS485;
      MSRS485 = 0;
+     
+         //
+         
      //Puertos:
      TEST = 0;
-
 
      ip=0;
 
@@ -245,76 +255,128 @@ void ConfiguracionPrincipal(){
      Delay_ms(100);                                                             //Espera hasta que se estabilicen los cambios
 
 }
+
+
 //*****************************************************************************************************************************************
 //Funcion para la obtener la temperatura del sensor DS18B20
 void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadSolicitud){
 
      //Variables:
-     unsigned short funcionRS485, subFuncionRS485, numDatosRS485;
-     unsigned short datoShort;
-     unsigned int datoInt;
+     unsigned char funcionSolicitud, subFuncionSolicitud;
+     unsigned char datoShort;
+     unsigned int datoInt, numDatosResp;
      float datoFloat;
-     unsigned short *ptrDatoInt, *ptrDatoFloat;
+     unsigned char *ptrDatoInt, *ptrDatoFloat, *ptrNumDatosResp;
 
      //Asignacion de punteros:
-     ptrDatoInt = (unsigned short *) & datoInt;
-     ptrDatoFloat = (unsigned short *) & datoFloat;
-     
-     //Recupera la funcion, la subfuncion y el numero de datos:
-     funcionRS485 = cabeceraSolicitud[1];
-     subFuncionRS485 = cabeceraSolicitud[2];
-     numDatosRS485 = cabeceraSolicitud[3];
+     ptrNumDatosResp = (unsigned char *) & numDatosResp; 
+     ptrDatoInt = (unsigned char *) & datoInt;
+     ptrDatoFloat = (unsigned char *) & datoFloat;
+
+     //Recupera la funcion y la subfuncion:
+     funcionSolicitud = cabeceraSolicitud[1];
+     subFuncionSolicitud = cabeceraSolicitud[2];
 
      //TEST = ~TEST;
 
-     switch (funcionRS485){
+     switch (funcionSolicitud){
           case 1:
                //Solicitud de medicion:
-               CalcularT2();
+               temperaturaRaw = LeerDS18B20();
+               TOF = CalcularTOF();
                break;
           case 2:
                //T2CON.TON = 0; //**prueba
                //Solicitud de lectura de datos:
                switch (subFuncionRS485){ 
                     case 1:
-                         //Lectura de la distancia [mm-int]:
-                         //datoInt = distanciaEstimada;
-                         respuestaPyloadRS485[0] = *(ptrDatoInt);                    //Llena la trama del payload de respuesra con los valores asociados al puntero
-                         respuestaPyloadRS485[1] = *(ptrDatoInt+1);
-                         cabeceraSolicitud[3] = 2;                                   //Actualiza el numero de datos de la cabecera
+                         //Lectura de la distancia [mm-int]
+                         //Llena la trama del payload de respuesra con los valores asociados al puntero:
+                         datoInt = temperaturaRaw;
+                         datoFloat = TOF;
+                         respuestaPyloadRS485[0] = *(ptrDatoFloat);
+                         respuestaPyloadRS485[1] = *(ptrDatoFloat+1);
+                         respuestaPyloadRS485[2] = *(ptrDatoFloat+2);
+                         respuestaPyloadRS485[3] = *(ptrDatoFloat+3);
+                         respuestaPyloadRS485[4] = *(ptrDatoInt);
+                         respuestaPyloadRS485[5] = *(ptrDatoInt+1);
+                         //Actualiza el numero de datos de payload:
+                         numDatosResp = 6;
+                         cabeceraSolicitud[3] = *(ptrNumDatosResp);
+                         cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
                          EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
                          break;
                     case 2:
-                         //Lectura del sensor DS18B20 [int]:
-                         //datoInt= LeerDS18B20();
-                         respuestaPyloadRS485[0] = *(ptrDatoInt);
-                         respuestaPyloadRS485[1] = *(ptrDatoInt+1);
-                         cabeceraSolicitud[3] = 2;
-                         EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
+                         //Lectura de la trama de muestreo:
+                         //Actualiza el numero de payload:
+                         numDatosResp = 700;
+                         cabeceraSolicitud[3] = *(ptrNumDatosResp);
+                         cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
+                         EnviarTramaInt(cabeceraSolicitud,vectorMuestras);
                          break;
                     case 3:
-                         //Lectura de la trama de muestreo:
-                         //EnviarTramaInt(vectorMuestreo);
-                         break;
-                    case 4:
                          //Lectura de la trama de envolvente:
-                         //EnviarTramaInt(vectorEnvolvente);
+                         numDatosResp = 700;
+                         cabeceraSolicitud[3] = *(ptrNumDatosResp);
+                         cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
+                         EnviarTramaInt(cabeceraSolicitud,vectorMuestras);
                          break;
                }
                break;
           case 4:
                //Test de comunicacion RS485:
-               cabeceraSolicitud[3] = 10;
-               EnviarTramaRS485(1, cabeceraSolicitud, tramaPruebaRS485);
+               switch (subFuncionSolicitud){
+                    case 2:
+                         //Test trama corta:
+                         //Actualiza el numero de payload:
+                         numDatosResp = 10;
+                         cabeceraSolicitud[3] = *(ptrNumDatosResp);
+                         cabeceraSolicitud[4] = *(ptrNumDatosResp+1); 
+                         EnviarTramaRS485(1, cabeceraSolicitud, tramaPruebaRS485);
+                         break;
+                    case 3:
+                         //Test trama larga:
+                         //Actualiza el numero de payload:
+                         numDatosResp = 512;
+                         cabeceraSolicitud[3] = *(ptrNumDatosResp);
+                         cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
+                         TEST = ~TEST;
+                         GenerarTramaPrueba(numDatosResp, cabeceraSolicitud);
+
+                         break;
+               }
                break;
      }
 
+}
+
+
+//*****************************************************************************************************************************************
+// Funcion para generar una trama de prueba:
+void GenerarTramaPrueba(unsigned int numDatosPrueba, unsigned char *cabeceraPrueba){
+
+     unsigned int contadorMuestras = 0;
+     unsigned char outputPyloadRS485[515];
+
+     //Llena la trama de respuesta con los datos del payload:
+     for (j=0;j<numDatosPrueba;j++){
+         outputPyloadRS485[j] = contadorMuestras;
+         contadorMuestras++;
+         if (contadorMuestras>255) {
+           contadorMuestras = 0;
+         }
+     }
+
+     EnviarTramaRS485(1, cabeceraPrueba, outputPyloadRS485);
+
+     //EnviarTramaRS485(1, cabeceraPrueba, tramaPruebaRS485);
 
 }
 
+
 //*****************************************************************************************************************************************
 //Funcion para la obtener una lectura cruda del sensor DS18B20
-int LeerDS18B20(){
+unsigned int LeerDS18B20(){
 
      unsigned int temperaturaCrudo;
      unsigned temp;
@@ -348,7 +410,7 @@ void GenerarPulso(){
 
      // Generacion de pulsos y captura de la señal de retorno:
      bm = 0;
-     contPulsos = 0;                                                                 //Limpia la variable del contador de pulsos
+     contPulsos = 0;                                                            //Limpia la variable del contador de pulsos
      RB2_bit = 0;                                                               //Limpia el pin que produce los pulsos de exitacion del transductor
      T1CON.TON = 0;                                                             //Apaga el TMR1
      TMR2 = 0;                                                                  //Encera el TMR2
@@ -365,9 +427,9 @@ void GenerarPulso(){
           for (k=0;k<numeroMuestras;k++){
 
               //Valor absoluto
-              valorAbsoluto = vectorMuestreo[k]-Mmed;
-              if (vectorMuestreo[k]<Mmed){
-                 valorAbsoluto = (vectorMuestreo[k]+((Mmed-vectorMuestreo[k])*2))-(Mmed);
+              valorAbsoluto = vectorMuestras[k]-Mmed;
+              if (vectorMuestras[k]<Mmed){
+                 valorAbsoluto = (vectorMuestras[k]+((Mmed-vectorMuestras[k])*2))-(Mmed);
               }
 
               //Filtrado
@@ -379,7 +441,7 @@ void GenerarPulso(){
               y0 = 0.0; for( f=0; f<O; f++ ) y0 += h[f]*XFIR[f];
 
               YY = (unsigned int)(y0);                                          //Reconstrucción de la señal: y en 10 bits.
-              vectorEnvolvente[k] = YY;
+              vectorMuestras[k] = YY;
 
           }
 
@@ -390,11 +452,11 @@ void GenerarPulso(){
       // Cálculo del punto maximo y TOF
       if (bm==2){
 
-         yy1 = Vector_Max(vectorEnvolvente, numeroMuestras, &maxIndex);                                    //Encuentra el valor maximo del vector R
+         yy1 = Vector_Max(vectorMuestras, numeroMuestras, &maxIndex);                                    //Encuentra el valor maximo del vector R
          i1b = maxIndex;                                                        //Asigna el subindice del valor maximo a la variable i1a
          i1a = 0;
 
-         while (vectorEnvolvente[i1a]<yy1){
+         while (vectorMuestras[i1a]<yy1){
                i1a++;
          }
 
@@ -402,8 +464,8 @@ void GenerarPulso(){
          i0 = i1 - dix;
          i2 = i1 + dix;
 
-         yy0 = vectorEnvolvente[i0];
-         yy2 = vectorEnvolvente[i2];
+         yy0 = vectorMuestras[i0];
+         yy2 = vectorMuestras[i2];
 
          yf0 = (float)(yy0);
          yf1 = (float)(yy1);
@@ -423,7 +485,7 @@ void GenerarPulso(){
 
 //*****************************************************************************************************************************************
 //Funcion para el calculo del T2
-float CalcularT2(){
+float CalcularTOF(){
 
      conts = 0;                                                                 //Limpia el contador de secuencias
      T2sum = 0.0;
@@ -452,13 +514,13 @@ float CalcularT2(){
 void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
 
      //Variables:
-     unsigned short tramaShort[numeroMuestras*2];
+     unsigned char tramaShort[numeroMuestras*2];
      unsigned int valorInt;
-     unsigned short *ptrValorInt;
+     unsigned char *ptrValorInt;
      //Asignacion de punteros:
-     ptrValorInt = (unsigned short *) & valorInt;
+     ptrValorInt = (unsigned char *) & valorInt;
      
-     //Convierte el vector de enteros en un vector de short:
+     //Convierte el vector de enteros en un vector de char:
      for (j=0;j<numeroMuestras;j++){
           valorInt = tramaInt[j];
           tramaShort[j*2] = *(ptrValorInt);
@@ -467,7 +529,7 @@ void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
      
      //Actualiza la cabecera y envia la trama por RS485:
      //cabecera[3] = numeroMuestras*2;                                                  //Actualiza el numero de datos de la cabecera
-     //EnviarTramaRS485(1, cabecera, tramaShort);
+     EnviarTramaRS485(1, cabecera, tramaShort);
 
 }
 
@@ -481,7 +543,7 @@ void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
      SAMP_bit = 0;                                 //Limpia el bit SAMP para iniciar la conversion del ADC
      while (!AD1CON1bits.DONE);                    //Espera hasta que se complete la conversion
      if (i<numeroMuestras){
-        vectorMuestreo[i] = ADC1BUF0;                           //Almacena el valor actual de la conversion del ADC en el vector M
+        vectorMuestras[i] = ADC1BUF0;                           //Almacena el valor actual de la conversion del ADC en el vector M
         i++;                                       //Aumenta en 1 el subindice del vector de Muestras
      } else {
         bm = 1;                                    //Cambia el valor de la bandera bm para terminar con el muestreo y dar comienzo al procesamiento de la señal
@@ -522,7 +584,7 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
      //*Recupera el pyload de la trama RS485:                                   //Aqui deberia entrar despues de recuperar la cabecera de trama
      if (banRSI==2){
           //Recupera el pyload de final de trama:
-          if (i_rs485<(solicitudCabeceraRS485[3])){
+          if (i_rs485<(numDatosRS485)){
                solicitudPyloadRS485[i_rs485] = byteRS485;
                i_rs485++;
           } else {
@@ -536,16 +598,18 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
           if (byteRS485==0x3A){                                                 //Verifica si el primer byte recibido sea el byte de inicio de trama
                banRSI = 1;
                i_rs485 = 0;
-               //TEST = 1;
           }
      }
-     if ((banRSI==1)&&(byteRS485!=0x3A)&&(i_rs485<4)){
+     if ((banRSI==1)&&(byteRS485!=0x3A)&&(i_rs485<5)){
           solicitudCabeceraRS485[i_rs485] = byteRS485;                          //Recupera los datos de cabecera de la trama UART: [Direccion, Funcion, Subfuncion, NumeroDatos]
           i_rs485++;
      }
-     if ((banRSI==1)&&(i_rs485==4)){
+     if ((banRSI==1)&&(i_rs485==5)){
           //Comprueba la direccion del nodo solicitado:
           if ((solicitudCabeceraRS485[0]==IDNODO)||(solicitudCabeceraRS485[0]==255)){
+               //Recupera el numero de datos:
+               *(ptrNumDatosRS485) = solicitudCabeceraRS485[3];
+               *(ptrNumDatosRS485+1) = solicitudCabeceraRS485[4];
                i_rs485 = 0;                                                     //Encera el subindice para almacenar el payload
                banRSI = 2;                                                      //Cambia el valor de la bandera para salir del bucle
           } else {
