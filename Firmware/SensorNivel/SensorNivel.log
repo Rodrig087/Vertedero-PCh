@@ -1,25 +1,23 @@
 0	1	mikroCdsPIC.exe -MSF -DBG -pP33FJ32MC202 -DL -SSA -O11111114 -fo80 -N"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel\SensorNivel.mcpds" -SP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for dsPIC\defs\" -SP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for dsPIC\uses\" -SP"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel\" -IP"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\Librerias\" "SensorNivel.c" "__Lib_Math.mcl" "__Lib_MathDouble.mcl" "__Lib_System.mcl" "__Lib_Delays.mcl" "__Lib_CString.mcl" "__Lib_CMath.mcl" "__Lib_Conversions.mcl" "__Lib_OneWire.mcl" "__Lib_UART_1_p24_p33.mcl" "__Lib_Vectors.mcl"	 
 diagnostics: 0	121	Loading...	 
-hint: 57	1354	 warning: "/*" within comment	C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel\SensorNivel.c
 diagnostics: 0	122	Compilation Started	rs485.c
-warning: 315	1505	Suspicious pointer conversion	SensorNivel.c
-warning: 322	1505	Suspicious pointer conversion	SensorNivel.c
-hint: 266	1163	Variable 'datoShort' has been declared, but not used	SensorNivel.c
+warning: 336	1505	Suspicious pointer conversion	SensorNivel.c
+hint: 270	1163	Variable 'datoShort' has been declared, but not used	SensorNivel.c
 hint: 0	1004	interrupt handler (Timer1Interrupt at 0x001A)	SensorNivel.c
 hint: 0	1004	interrupt handler (Timer2Interrupt at 0x0022)	SensorNivel.c
 hint: 0	1004	interrupt handler (UART1Interrupt at 0x002A)	SensorNivel.c
-diagnostics: 630	123	Compiled Successfully	SensorNivel.c
+diagnostics: 677	123	Compiled Successfully	SensorNivel.c
 warning: 31	1512	variable 'numDatos' might not have been initialized	rs485.c
-warning: 521	1512	variable 'valorInt' might not have been initialized	SensorNivel.c
-warning: 272	1512	variable 'numDatosResp' might not have been initialized	SensorNivel.c
-warning: 273	1512	variable 'datoInt' might not have been initialized	SensorNivel.c
-warning: 274	1512	variable 'datoFloat' might not have been initialized	SensorNivel.c
-hint: 381	1164	Variable 'temperaturaCrudo' has been eliminated by optimizer	SensorNivel.c
-diagnostics: 0	127	All files Compiled in 79 ms	 
+warning: 566	1512	variable 'valorInt' might not have been initialized	SensorNivel.c
+warning: 276	1512	variable 'numDatosResp' might not have been initialized	SensorNivel.c
+warning: 277	1512	variable 'datoInt' might not have been initialized	SensorNivel.c
+warning: 278	1512	variable 'datoFloat' might not have been initialized	SensorNivel.c
+hint: 391	1164	Variable 'temperaturaCrudo' has been eliminated by optimizer	SensorNivel.c
+diagnostics: 0	127	All files Compiled in 78 ms	 
 hint: 0	1144	Used RX (bytes): 32 (100%)   Free RX (bytes): 0 (0%)	Used RX (bytes): 32 (100%)   Free RX (bytes): 0 (0%)
 hint: 0	1144	Static RAM (bytes): 943   Dynamic RAM (bytes): 1104	Static RAM (bytes): 943   Dynamic RAM (bytes): 1104
-hint: 0	1144	Used ROM (bytes): 4918 (22%)  Free ROM (bytes): 17610 (78%)	Used ROM (bytes): 4918 (22%)  Free ROM (bytes): 17610 (78%)
+hint: 0	1144	Used ROM (bytes): 5020 (22%)  Free ROM (bytes): 17508 (78%)	Used ROM (bytes): 5020 (22%)  Free ROM (bytes): 17508 (78%)
 diagnostics: 0	125	Project Linked Successfully	SensorNivel.mcpds
-diagnostics: 0	128	Linked in 78 ms	 
-diagnostics: 0	129	Project 'SensorNivel.mcpds' completed: 203 ms	 
-diagnostics: 0	103	Finished successfully: 20 oct. 2021, 17:37:00	SensorNivel.mcpds
+diagnostics: 0	128	Linked in 63 ms	 
+diagnostics: 0	129	Project 'SensorNivel.mcpds' completed: 188 ms	 
+diagnostics: 0	103	Finished successfully: 24 oct. 2021, 23:01:35	SensorNivel.mcpds

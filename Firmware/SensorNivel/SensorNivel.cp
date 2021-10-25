@@ -51,7 +51,7 @@ void EnviarTramaRS485(unsigned char puertoUART, unsigned char *cabecera, unsigne
  }
 
 }
-#line 34 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 36 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
 const float h[]=
 {
 0,
@@ -152,11 +152,13 @@ unsigned int temperaturaRaw;
 
 void ConfiguracionPrincipal();
 void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadSolicitud);
-unsigned int LeerDS18B20();
-void GenerarPulso();
-float CalcularTOF();
 void GenerarTramaPrueba(unsigned int numDatosPrueba, unsigned char *cabeceraPrueba);
-void EnviarTramaInt(unsigned char*, unsigned char*);
+unsigned int LeerDS18B20();
+void ProbarMuestreo();
+void CapturarMuestras();
+void ProcesarMuestras();
+float CalcularTOF();
+void EnviarTramaInt(unsigned char*, unsigned char*,unsigned int temperatura);
 
 
 
@@ -269,8 +271,8 @@ void ConfiguracionPrincipal(){
  UART1_Init(19200);
 
 
- IPC0bits.T1IP = 0x06;
- IPC1bits.T2IP = 0x07;
+ IPC0bits.T1IP = 0x07;
+ IPC1bits.T2IP = 0x06;
  IPC2bits.U1RXIP = 0x05;
 
  Delay_ms(100);
@@ -298,9 +300,9 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  funcionSolicitud = cabeceraSolicitud[1];
  subFuncionSolicitud = cabeceraSolicitud[2];
 
-
-
  switch (funcionSolicitud){
+ case 1:
+ switch (subFuncionSolicitud){
  case 1:
 
  temperaturaRaw = LeerDS18B20();
@@ -308,8 +310,25 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  break;
  case 2:
 
+ temperaturaRaw = LeerDS18B20();
+ CapturarMuestras();
+ break;
+ case 3:
 
- switch (subFuncionRS485){
+ temperaturaRaw = LeerDS18B20();
+ ProbarMuestreo();
+ break;
+ default:
+
+ temperaturaRaw = LeerDS18B20();
+ TOF = CalcularTOF();
+ break;
+ }
+ break;
+ case 2:
+
+
+ switch (subFuncionSolicitud){
  case 1:
 
 
@@ -330,17 +349,10 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  case 2:
 
 
- numDatosResp = 700;
+ numDatosResp = 702;
  cabeceraSolicitud[3] = *(ptrNumDatosResp);
  cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
- EnviarTramaInt(cabeceraSolicitud,vectorMuestras);
- break;
- case 3:
-
- numDatosResp = 700;
- cabeceraSolicitud[3] = *(ptrNumDatosResp);
- cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
- EnviarTramaInt(cabeceraSolicitud,vectorMuestras);
+ EnviarTramaInt(cabeceraSolicitud,vectorMuestras,temperaturaRaw);
  break;
  }
  break;
@@ -361,9 +373,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  numDatosResp = 512;
  cabeceraSolicitud[3] = *(ptrNumDatosResp);
  cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
- TEST = ~TEST;
  GenerarTramaPrueba(numDatosResp, cabeceraSolicitud);
-
  break;
  }
  break;
@@ -389,8 +399,6 @@ void GenerarTramaPrueba(unsigned int numDatosPrueba, unsigned char *cabeceraPrue
  }
 
  EnviarTramaRS485(1, cabeceraPrueba, outputPyloadRS485);
-
-
 
 }
 
@@ -425,7 +433,41 @@ unsigned int LeerDS18B20(){
 
 
 
-void GenerarPulso(){
+void ProbarMuestreo(){
+
+ TEST = 1;
+
+ TMR1 = 0;
+ T1CON.TON = 1;
+ bm = 0;
+ i = 0;
+ while(bm!=1);
+
+}
+
+
+
+
+void CapturarMuestras(){
+
+ TEST = 1;
+
+
+ bm = 0;
+ contPulsos = 0;
+ RB2_bit = 0;
+ T1CON.TON = 0;
+ TMR2 = 0;
+ T2CON.TON = 1;
+ i = 0;
+ while(bm!=1);
+
+}
+
+
+
+
+void ProcesarMuestras(){
 
  TEST = 1;
 
@@ -515,7 +557,7 @@ float CalcularTOF(){
  T2b = 0.0;
 
  while (conts<Nsm){
- GenerarPulso();
+ ProcesarMuestras();
  T2b = T2;
  if ((T2b-T2a)<=T2umb){
  T2sum = T2sum + T2b;
@@ -532,14 +574,16 @@ float CalcularTOF(){
 
 
 
-void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
+void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt, unsigned int temperatura){
 
 
- unsigned char tramaShort[numeroMuestras*2];
+ unsigned char tramaShort[705];
  unsigned int valorInt;
- unsigned char *ptrValorInt;
+ unsigned char *ptrValorInt, *ptrTemperatura;
+
 
  ptrValorInt = (unsigned char *) & valorInt;
+ ptrTemperatura = (unsigned char *) & temperatura;
 
 
  for (j=0;j<numeroMuestras;j++){
@@ -547,6 +591,10 @@ void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
  tramaShort[j*2] = *(ptrValorInt);
  tramaShort[(j*2)+1] = *(ptrValorInt+1);
  }
+
+
+ tramaShort[700] = *(ptrTemperatura);
+ tramaShort[701] = *(ptrTemperatura+1);
 
 
 
@@ -584,12 +632,13 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
  T2CON.TON = 0;
  TMR1 = 0;
  T1CON.TON = 1;
-
+ bm = 0;
+ i = 0;
  }
  }
  contPulsos++;
  T2IF_bit = 0;
-#line 576 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+
 }
 
 

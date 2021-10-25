@@ -12,6 +12,8 @@ Observaciones:
 
 Descripcion:
 Funcion1: Inicio de medicion, Payload[TiempoSeg]??
+           Subfuncion1: Calcula el TOF y lee el sensor de temperatura.
+                   Subfuncion2: Captura la señal ultrasonica y lee el sensor de temperatura.
 Funcion2: Lectura de datos:
            Subfuncion1: Payload[t2Prom(4bytes) + tempRaw(2bytes)]
            Subfuncion2: vectorMuestras[700bytes]
@@ -131,11 +133,13 @@ unsigned int temperaturaRaw;
 /////////////////////////////////////////////////////////  Declaracion de funciones  /////////////////////////////////////////////////////////
 void ConfiguracionPrincipal();
 void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadSolicitud);
-unsigned int LeerDS18B20();
-void GenerarPulso();
-float CalcularTOF();
 void GenerarTramaPrueba(unsigned int numDatosPrueba, unsigned char *cabeceraPrueba);
-void EnviarTramaInt(unsigned char*, unsigned char*);
+unsigned int LeerDS18B20();
+void ProbarMuestreo();
+void CapturarMuestras();
+void ProcesarMuestras();
+float CalcularTOF();
+void EnviarTramaInt(unsigned char*, unsigned char*,unsigned int temperatura);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -245,11 +249,11 @@ void ConfiguracionPrincipal(){
      RPOR3bits.RP7R = 0x03;                                                     //Asigna Tx a RP7
      IEC0.U1RXIE = 1;                                                           //Habilita la interrupcion por recepcion de dato por UART
      U1RXIF_bit = 0;                                                            //Limpia la bandera de interrupcion de UARTRX
-     UART1_Init(19200);                                                          //Inicializa el modulo UART a 9600 bps
+     UART1_Init(19200);                                                         //Inicializa el modulo UART a 9600 bps
 
      //Nivel de prioridad de las interrupciones (+alta -> +prioridad):
-     IPC0bits.T1IP = 0x06;                                                      //Nivel de prioridad de la interrupcion por desbordamiento del TMR1
-     IPC1bits.T2IP = 0x07;                                                      //Nivel de prioridad de la interrupcion por desbordamiento del TMR2
+     IPC0bits.T1IP = 0x07;                                                      //Nivel de prioridad de la interrupcion por desbordamiento del TMR1
+     IPC1bits.T2IP = 0x06;                                                      //Nivel de prioridad de la interrupcion por desbordamiento del TMR2
      IPC2bits.U1RXIP = 0x05;                                                    //Nivel de prioridad de la interrupcion UARTRX
 
      Delay_ms(100);                                                             //Espera hasta que se estabilicen los cambios
@@ -277,18 +281,35 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
      funcionSolicitud = cabeceraSolicitud[1];
      subFuncionSolicitud = cabeceraSolicitud[2];
 
-     //TEST = ~TEST;
-
      switch (funcionSolicitud){
           case 1:
-               //Solicitud de medicion:
-               temperaturaRaw = LeerDS18B20();
-               TOF = CalcularTOF();
+               switch (subFuncionSolicitud){
+                    case 1:
+                         //Realiza una medicion de temperatura y TOF:
+                         temperaturaRaw = LeerDS18B20();
+                         TOF = CalcularTOF();
+                         break;
+                    case 2:
+                         //Realiza una medicion de temperatura y captura la señal ultrasonica
+                         temperaturaRaw = LeerDS18B20();
+                         CapturarMuestras();
+                         break;
+                    case 3:
+                         //Prueba el ADC:
+                         temperaturaRaw = LeerDS18B20();
+                         ProbarMuestreo();
+                         break;
+                    default:
+                         //Realiza una medicion de temperatura y TOF:
+                         temperaturaRaw = LeerDS18B20();
+                         TOF = CalcularTOF();
+                         break;
+               }                                                 
                break;
           case 2:
                //T2CON.TON = 0; //**prueba
                //Solicitud de lectura de datos:
-               switch (subFuncionRS485){ 
+               switch (subFuncionSolicitud){
                     case 1:
                          //Lectura de la distancia [mm-int]
                          //Llena la trama del payload de respuesra con los valores asociados al puntero:
@@ -307,19 +328,12 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          EnviarTramaRS485(1, cabeceraSolicitud, respuestaPyloadRS485);
                          break;
                     case 2:
-                         //Lectura de la trama de muestreo:
+                         //Recupera el vector de muestras y la temperatura:
                          //Actualiza el numero de payload:
-                         numDatosResp = 700;
+                         numDatosResp = 702;
                          cabeceraSolicitud[3] = *(ptrNumDatosResp);
                          cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
-                         EnviarTramaInt(cabeceraSolicitud,vectorMuestras);
-                         break;
-                    case 3:
-                         //Lectura de la trama de envolvente:
-                         numDatosResp = 700;
-                         cabeceraSolicitud[3] = *(ptrNumDatosResp);
-                         cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
-                         EnviarTramaInt(cabeceraSolicitud,vectorMuestras);
+                         EnviarTramaInt(cabeceraSolicitud,vectorMuestras,temperaturaRaw);
                          break;
                }
                break;
@@ -340,9 +354,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          numDatosResp = 512;
                          cabeceraSolicitud[3] = *(ptrNumDatosResp);
                          cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
-                         TEST = ~TEST;
                          GenerarTramaPrueba(numDatosResp, cabeceraSolicitud);
-
                          break;
                }
                break;
@@ -368,8 +380,6 @@ void GenerarTramaPrueba(unsigned int numDatosPrueba, unsigned char *cabeceraPrue
      }
 
      EnviarTramaRS485(1, cabeceraPrueba, outputPyloadRS485);
-
-     //EnviarTramaRS485(1, cabeceraPrueba, tramaPruebaRS485);
 
 }
 
@@ -403,8 +413,42 @@ unsigned int LeerDS18B20(){
 }
 
 //*****************************************************************************************************************************************
-//Funcion para la generacion y procesamiento de la señal
-void GenerarPulso(){
+//Funcion para capturar la señal ultrasonica
+void ProbarMuestreo(){
+
+     TEST = 1;
+
+     TMR1 = 0;                                                                  //Encera el TMR1
+     T1CON.TON = 1;                                                             //Enciende el TMR1
+     bm = 0;
+     i = 0;                                                                     //Limpia las variables asociadas al almacenamiento de la señal muestreada
+     while(bm!=1);
+
+}
+
+
+//*****************************************************************************************************************************************
+//Funcion para capturar la señal ultrasonica
+void CapturarMuestras(){
+
+     TEST = 1;
+
+     // Generacion de pulsos y captura de la señal de retorno:
+     bm = 0;
+     contPulsos = 0;                                                            //Limpia la variable del contador de pulsos
+     RB2_bit = 0;                                                               //Limpia el pin que produce los pulsos de exitacion del transductor
+     T1CON.TON = 0;                                                             //Apaga el TMR1
+     TMR2 = 0;                                                                  //Encera el TMR2
+     T2CON.TON = 1;                                                             //Enciende el TMR2
+     i = 0;                                                                     //Limpia las variables asociadas al almacenamiento de la señal muestreada
+     while(bm!=1); 
+
+}
+
+
+//*****************************************************************************************************************************************
+//Funcion capturar y procesar la señal ultrasonica
+void ProcesarMuestras(){
 
      TEST = 1;
 
@@ -494,10 +538,10 @@ float CalcularTOF(){
      T2b = 0.0;
 
      while (conts<Nsm){
-           GenerarPulso();                                                      //Inicia una secuencia de medicion
+           ProcesarMuestras();                                                      //Inicia una secuencia de medicion
            T2b = T2;
            if ((T2b-T2a)<=T2umb){                                               //Verifica si el T2 actual esta dentro de un umbral pre-establecido
-              T2sum = T2sum + T2b;                                              //Acumula la sumatoria de valores de T2 calculados por la funcion GenerarPulso()
+              T2sum = T2sum + T2b;                                              //Acumula la sumatoria de valores de T2 calculados por la funcion ProcesarMuestras()
               conts++;                                                          //Aumenta el contador de secuencias
            }
            T2a = T2b;
@@ -511,21 +555,27 @@ float CalcularTOF(){
 
 //*****************************************************************************************************************************************
 //Funcion para enviar la trama de datos tipo int:
-void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
+void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt, unsigned int temperatura){
 
      //Variables:
-     unsigned char tramaShort[numeroMuestras*2];
+     unsigned char tramaShort[705];
      unsigned int valorInt;
-     unsigned char *ptrValorInt;
-     //Asignacion de punteros:
-     ptrValorInt = (unsigned char *) & valorInt;
+     unsigned char *ptrValorInt, *ptrTemperatura;
      
+         //Asignacion de punteros:
+     ptrValorInt = (unsigned char *) & valorInt;
+     ptrTemperatura = (unsigned char *) & temperatura;
+         
      //Convierte el vector de enteros en un vector de char:
      for (j=0;j<numeroMuestras;j++){
           valorInt = tramaInt[j];
           tramaShort[j*2] = *(ptrValorInt);
           tramaShort[(j*2)+1] = *(ptrValorInt+1);
      }
+         
+     //Agrega los datos de temperatura al final de la trama:
+     tramaShort[700] = *(ptrTemperatura);
+     tramaShort[701] = *(ptrTemperatura+1);
      
      //Actualiza la cabecera y envia la trama por RS485:
      //cabecera[3] = numeroMuestras*2;                                                  //Actualiza el numero de datos de la cabecera
@@ -540,39 +590,36 @@ void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt){
 //********************************************************************************************************************************************
 //Interrupcion por desbordamiento del TMR1:
 void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
-     SAMP_bit = 0;                                 //Limpia el bit SAMP para iniciar la conversion del ADC
-     while (!AD1CON1bits.DONE);                    //Espera hasta que se complete la conversion
+     SAMP_bit = 0;                                                              //Limpia el bit SAMP para iniciar la conversion del ADC
+     while (!AD1CON1bits.DONE);                                                 //Espera hasta que se complete la conversion
      if (i<numeroMuestras){
-        vectorMuestras[i] = ADC1BUF0;                           //Almacena el valor actual de la conversion del ADC en el vector M
-        i++;                                       //Aumenta en 1 el subindice del vector de Muestras
+        vectorMuestras[i] = ADC1BUF0;                                           //Almacena el valor actual de la conversion del ADC en el vectorMuestras
+        i++;                                                                    //Aumenta en 1 el subindice del vector de Muestras
      } else {
-        bm = 1;                                    //Cambia el valor de la bandera bm para terminar con el muestreo y dar comienzo al procesamiento de la señal
-        T1CON.TON = 0;                             //Apaga el TMR1
+        bm = 1;                                                                 //Cambia el valor de la bandera bm para terminar con el muestreo y dar comienzo al procesamiento de la señal
+        T1CON.TON = 0;                                                          //Apaga el TMR1
      }
-     T1IF_bit = 0;                                 //Limpia la bandera de interrupcion por desbordamiento del TMR1
+     T1IF_bit = 0;                                                              //Limpia la bandera de interrupcion por desbordamiento del TMR1
 }
 //********************************************************************************************************************************************
 //Interrupcion por desbordamiento del TMR2:
 void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
 
-     if (contPulsos<10){                                //Controla el numero total de pulsos de exitacion del transductor ultrasonico. (
-          RB2_bit = ~RB2_bit;                      //Conmuta el valor del pin RB14
+     if (contPulsos<10){                                                        //Controla el numero total de pulsos de exitacion del transductor ultrasonico. (
+          RB2_bit = ~RB2_bit;                                                   //Conmuta el valor del pin RB14
      }else {
-          RB2_bit = 0;                             //Pone a cero despues de enviar todos los pulsos de exitacion.
+          RB2_bit = 0;                                                          //Pone a cero despues de enviar todos los pulsos de exitacion.
           if (contPulsos==110){
-              T2CON.TON = 0;                       //Apaga el TMR2
-              TMR1 = 0;                            //Encera el TMR1
-              T1CON.TON = 1;                       //Enciende el TMR1
-              //bm=0;
+              T2CON.TON = 0;                                                    //Apaga el TMR2
+              TMR1 = 0;                                                         //Encera el TMR1
+              T1CON.TON = 1;                                                    //Enciende el TMR1
+              bm = 0;
+              i = 0;
           }
      }
-     contPulsos++;                                      //Aumenta el contador en una unidad.
-     T2IF_bit = 0;                                 //Limpia la bandera de interrupcion por desbordamiento del TMR2
-     /*
-     TEST = 0;  //*****
-     RB2_bit = ~RB2_bit;
-     T2IF_bit = 0;
-     */
+     contPulsos++;                                                              //Aumenta el contador en una unidad.
+     T2IF_bit = 0;                                                              //Limpia la bandera de interrupcion por desbordamiento del TMR2
+
 }
 //********************************************************************************************************************************************
 //Interrupcion por recepcion de datos a travez de UART

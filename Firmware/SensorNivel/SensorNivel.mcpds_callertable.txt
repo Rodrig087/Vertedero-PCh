@@ -22,7 +22,7 @@ UART1Interrupt
 				Delay_1us
 				Delay_50us
 		CalcularTOF
-			GenerarPulso
+			ProcesarMuestras
 				Vector_Max
 				_Long2Float
 				_Sub_FP
@@ -36,6 +36,8 @@ UART1Interrupt
 			_Compare_Le_Fp
 				_Compare_Fp
 			_AddSub_FP
+		CapturarMuestras
+		ProbarMuestreo
 		EnviarTramaRS485
 			UART1_Write
 			UART1_Tx_Idle

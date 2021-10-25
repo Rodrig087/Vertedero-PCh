@@ -73,7 +73,7 @@ int main() {
 	//Datos de prueba:
 	idPet = 3;
 	funcionPet = 1;
-	subFuncionPet = 0;
+	subFuncionPet = 2;
 	numDatosPet = 0;
 		
 	//Variables para convertir la temperatura:
