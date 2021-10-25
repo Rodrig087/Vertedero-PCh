@@ -62,9 +62,9 @@ int ConfiguracionPrincipal();
 void EnviarSolicitud(unsigned char id, unsigned char funcion, unsigned char subFuncion, unsigned char numDatos, unsigned char* payload);
 void RecibirRespuesta();
 void RecibirPyloadRespuesta(unsigned int numBytesPyload, unsigned char* pyloadRS485);
-void TestComunicacionSPI(unsigned char* pyloadRS485);	
 void CrearArchivo(unsigned short idConc, unsigned short idNodo);
-void GuardarTrama(unsigned char* tramaRS485, unsigned int longitudTrama); 										
+void GuardarTrama(unsigned char* tramaRS485, unsigned int longitudTrama); 	
+void LeerTemperaturaSensor(unsigned char* tramaDatosShort, unsigned int longitudTramaShort);									
 void ImprimirInformacion();
 void Salir();						
 
@@ -152,42 +152,13 @@ void ImprimirInformacion(){
 	//Imprime la solicitud:
 	printf("\nTrama enviada:");
 	printf("\n Cabecera: %d %d %d %d", idPet, funcionPet, subFuncionPet, numDatosPet);
-	printf("\n Payload: ");
-	for (i=0;i<numDatosPet;i++){
-        printf("%#02X ", payloadPet[i]);
-    }
-	printf("\n Sumatoria control = %d", sumEnviado);
-	
+		
 	//Imprime la respuesta:
 	printf("\nTrama recibida:");
 	printf("\n Cabecera: %d %d %d %d", idResp, funcionResp, subFuncionResp, numDatosResp);
-	printf("\n Payload: ");
-	for (i=0;i<numDatosResp;i++){
-		printf("%#02X ", payloadResp[i]);
-	}
-		
-	//Comprueba la sumatoria de control en las solicitudes de testeo de comunicacion:
-	if (funcionPet==4){
-				
-		//Test comunicacion SPI
-		if (subFuncionPet==1){
-			if (sumRecibido==1645){
-			printf("\n Sumatoria control = %d", sumRecibido);
-			}else{
-				printf("\n Sumatoria control = " RED "%d" RESET, sumRecibido);
-			}
-		}
-		//Test comunicacion RS485:
-		if (subFuncionPet==2){
-			//0XB*9=99dec
-			if (sumRecibido==(99+idPet)){
-			printf("\n Sumatoria control = %d", sumRecibido);
-			}else{
-				printf("\n Sumatoria control = " RED "%d" RESET, sumRecibido);
-			}		
-		}
-	}
-		
+	
+	LeerTemperaturaSensor(payloadResp, numDatosResp);
+			
 	Salir();
 	
 }
@@ -258,36 +229,22 @@ void RecibirRespuesta(){
 	bcm2835_spi_transfer(0xF1);	
 
 	delay(25); //**Este retardo es muy importante**
+	//Confirma si recibio la respuesta:
+	printf("\n>Respuesta recibida\n");
 	
 	//Se recupera el payload de la respuesta:
-	if (idResp==0){
-		//Recupera el payload para tetear la comunicacion SPI con el concentrador:
-		TestComunicacionSPI(payloadResp); 
-		//Por ahora solo hay una opcion disponible en el concentrador. Si se desea agregar mas se puede agregar un switch case o un if.
-	} else {
-		//Recupera el payload enviado por los nodos.
-		RecibirPyloadRespuesta(numDatosResp, payloadResp);	
-		CrearArchivo(IDConcentrador, idResp);
-		GuardarTrama(payloadResp, numDatosResp);
-	}
+	RecibirPyloadRespuesta(numDatosResp, payloadResp);	
+	//CrearArchivo(IDConcentrador, idResp);
+	//GuardarTrama(payloadResp, numDatosResp);
 	
-	//sumatoria de control. Disponible solo para las operaciones de testeo de la comunicacion SPI y RS485:
-	if (funcionResp==4){
-		for (i=0;i<numDatosResp;i++){
-			sumRecibido = sumRecibido + payloadResp[i];
-		}
-	}
-	
-	//Imprime mensaje de respuesta:
-	printf("\n>Respuesta recibida\n");
-			
+				
 	//Apaga el LEDTEST:
 	digitalWrite (LEDTEST, LOW);
 	
 	//Imprime la informacion de solicitud y respuesta:
 	ImprimirInformacion();
 	
-	Salir();
+	//Salir();
 		
 }
 
@@ -306,22 +263,6 @@ void RecibirPyloadRespuesta(unsigned int numBytesPyload, unsigned char* pyloadRS
 	bcm2835_delayMicroseconds(TIEMPO_SPI);
 	
 }	
-
-//Funcion para testear la comunicacion SPI con el concentrador (C:0xA3 F:0xF3):
-void TestComunicacionSPI(unsigned char* pyloadRS485){
-	
-	//printf("\nRecuperando pyload...\n");
-	bcm2835_spi_transfer(0xA3);
-	bcm2835_delayMicroseconds(TIEMPO_SPI);
-	for (i=0;i<10;i++){
-        bufferSPI = bcm2835_spi_transfer(0x00);
-        pyloadRS485[i] = bufferSPI;
-        bcm2835_delayMicroseconds(TIEMPO_SPI);
-    }
-	bcm2835_spi_transfer(0xF3);
-	bcm2835_delayMicroseconds(TIEMPO_SPI);
-	
-}
 
 //**************************************************************************************************************************************
 
@@ -390,12 +331,11 @@ void LeerTemperaturaSensor(unsigned char* tramaDatosShort, unsigned int longitud
 	temperaturaFloat = ((temperaturaRaw & 0x000F) * 625) / 10000.0;
 	//Calcula la temperatura:
 	temperaturaSensor = temperaturaInt + temperaturaFloat;
-	//Imprime los valores de temperatura:
-	//print("   Temperatura LSB: " + hex(temperaturaLSB))
-	//print("   Temperatura MSB: " + hex(temperaturaMSB))
-	//print("   Temperatura Raw: " + str(temperaturaRaw))
-	//printf("   Temperatura sensor: " + str(temperaturaSensor))
-	("\n Temperatura sensor: %d", temperaturaSensor);
+	//Imprime los datos de temperatura:
+	printf("\n Temperatura LSB: %d", temperaturaLSB);
+	printf("\n Temperatura MSB: %d", temperaturaMSB);
+	printf("\n Temperatura Raw: %d", temperaturaRaw);
+	printf("\n Temperatura sensor: %f", temperaturaSensor);
 	
 }
 
