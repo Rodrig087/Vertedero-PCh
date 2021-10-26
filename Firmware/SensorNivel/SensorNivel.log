@@ -18,6 +18,6 @@ hint: 0	1144	Used RX (bytes): 32 (100%)   Free RX (bytes): 0 (0%)	Used RX (bytes
 hint: 0	1144	Static RAM (bytes): 943   Dynamic RAM (bytes): 1104	Static RAM (bytes): 943   Dynamic RAM (bytes): 1104
 hint: 0	1144	Used ROM (bytes): 5020 (22%)  Free ROM (bytes): 17508 (78%)	Used ROM (bytes): 5020 (22%)  Free ROM (bytes): 17508 (78%)
 diagnostics: 0	125	Project Linked Successfully	SensorNivel.mcpds
-diagnostics: 0	128	Linked in 63 ms	 
-diagnostics: 0	129	Project 'SensorNivel.mcpds' completed: 188 ms	 
-diagnostics: 0	103	Finished successfully: 24 oct. 2021, 23:01:35	SensorNivel.mcpds
+diagnostics: 0	128	Linked in 62 ms	 
+diagnostics: 0	129	Project 'SensorNivel.mcpds' completed: 203 ms	 
+diagnostics: 0	103	Finished successfully: 25 oct. 2021, 17:13:00	SensorNivel.mcpds

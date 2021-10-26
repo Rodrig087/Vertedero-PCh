@@ -73,7 +73,7 @@ int main() {
 	//Datos de prueba:
 	idPet = 3;
 	funcionPet = 1;
-	subFuncionPet = 2;
+	subFuncionPet = 1;
 	numDatosPet = 0;
 		
 	//Variables para convertir la temperatura:
@@ -130,11 +130,10 @@ int ConfiguracionPrincipal(){
 //C:0xA1	F:0xF1
 void EnviarSolicitud(unsigned short id, unsigned short funcion, unsigned short subFuncion, unsigned short numDatos, unsigned char* payload){
 	
-	
 	bcm2835_delayMicroseconds(200);
 	
 	//Envia la cabecera: [id, funcion, subfuncion, #Datos]:
-	bcm2835_spi_transfer(0xA1);
+	bcm2835_spi_transfer(0xA0);
 	bcm2835_delayMicroseconds(TIEMPO_SPI);
 	bcm2835_spi_transfer(id);
 	bcm2835_delayMicroseconds(TIEMPO_SPI);
@@ -143,6 +142,7 @@ void EnviarSolicitud(unsigned short id, unsigned short funcion, unsigned short s
 	bcm2835_spi_transfer(subFuncion);
 	bcm2835_delayMicroseconds(TIEMPO_SPI);
 	bcm2835_spi_transfer(numDatos);
+	bcm2835_spi_transfer(0x00);     //Envia este byte para simular el MSB de la variable numDatos. Es poco probable que una solicitud tenga un pyload de mas de 255 bytes.
 	bcm2835_delayMicroseconds(TIEMPO_SPI);
 	
 	//Envia el payload:
@@ -152,7 +152,7 @@ void EnviarSolicitud(unsigned short id, unsigned short funcion, unsigned short s
     }
 		
 	//Envia el delimitador de fin de trama:
-	bcm2835_spi_transfer(0xF1);	
+	bcm2835_spi_transfer(0xF0);	
 	bcm2835_delayMicroseconds(TIEMPO_SPI);
 	
 	//Imprime la solicitud:

@@ -156,7 +156,13 @@ void ImprimirInformacion(){
 	//Imprime la respuesta:
 	printf("\nTrama recibida:");
 	printf("\n Cabecera: %d %d %d %d", idResp, funcionResp, subFuncionResp, numDatosResp);
-	
+	/*
+	printf("\n Payload: ");
+	for (i=0;i<numDatosResp;i++){
+		printf("%#02X ", payloadResp[i]);
+	}
+	*/
+			
 	LeerTemperaturaSensor(payloadResp, numDatosResp);
 			
 	Salir();
@@ -234,8 +240,9 @@ void RecibirRespuesta(){
 	
 	//Se recupera el payload de la respuesta:
 	RecibirPyloadRespuesta(numDatosResp, payloadResp);	
-	//CrearArchivo(IDConcentrador, idResp);
-	//GuardarTrama(payloadResp, numDatosResp);
+	CrearArchivo(IDConcentrador, idResp);
+	GuardarTrama(payloadResp, numDatosResp);
+	//system("python3 GraficarUltrasonido.py");
 	
 				
 	//Apaga el LEDTEST:
@@ -272,13 +279,13 @@ void RecibirPyloadRespuesta(unsigned int numBytesPyload, unsigned char* pyloadRS
 void CrearArchivo(unsigned short idConc, unsigned short idNodo){
 
 	char nombreArchivo[50];
-	char idArchivo[8];
+	char idArchivo[10];
 	char ext[5];
 		
 	
 	//Realiza la concatenacion para obtner el nombre del archivo:			
 	strcpy(nombreArchivo, "/home/rsa/Resultados/");
-	sprintf(idArchivo, "C%0.2dN%0.2d_", idConc, idNodo); 
+	sprintf(idArchivo, "C%0.2dN%0.2d_us", idConc, idNodo); 
 	strcpy(ext, ".dat");
 	strcat(nombreArchivo, idArchivo);
 	strcat(nombreArchivo, ext); 
@@ -332,9 +339,9 @@ void LeerTemperaturaSensor(unsigned char* tramaDatosShort, unsigned int longitud
 	//Calcula la temperatura:
 	temperaturaSensor = temperaturaInt + temperaturaFloat;
 	//Imprime los datos de temperatura:
-	printf("\n Temperatura LSB: %d", temperaturaLSB);
-	printf("\n Temperatura MSB: %d", temperaturaMSB);
-	printf("\n Temperatura Raw: %d", temperaturaRaw);
+	//printf("\n Temperatura LSB: %#02X", temperaturaLSB);
+	//printf("\n Temperatura MSB: %#02X", temperaturaMSB);
+	//printf("\n Temperatura Raw: %#04X", temperaturaRaw);
 	printf("\n Temperatura sensor: %f", temperaturaSensor);
 	
 }
