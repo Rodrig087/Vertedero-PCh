@@ -223,9 +223,10 @@ void ConfiguracionPrincipal(){
 
  AD1PCFGL = 0xFFFD;
  TRISA1_bit = 1;
- TRISB = 0xFF40;
+
  MSRS485_Direction = 0;
  TEST_Direction = 0;
+
 
  AD1CON1.AD12B = 0;
  AD1CON1bits.FORM = 0x00;
@@ -436,12 +437,12 @@ unsigned int LeerDS18B20(){
 void ProbarMuestreo(){
 
  TEST = 1;
-
- TMR1 = 0;
- T1CON.TON = 1;
  bm = 0;
  i = 0;
+ TMR1 = 0;
+ T1CON.TON = 1;
  while(bm!=1);
+ TEST = 0;
 
 }
 
@@ -452,15 +453,15 @@ void CapturarMuestras(){
 
  TEST = 1;
 
-
- bm = 0;
  contPulsos = 0;
  RB2_bit = 0;
+ bm = 0;
+ i = 0;
  T1CON.TON = 0;
  TMR2 = 0;
  T2CON.TON = 1;
- i = 0;
  while(bm!=1);
+ TEST = 0;
 
 }
 

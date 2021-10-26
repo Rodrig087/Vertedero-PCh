@@ -157,10 +157,10 @@ void main() {
      y = 0;
 
      //Calculos:
-         T2 = 0;
+     T2 = 0;
      bm = 0;
-         TOF = 0;
-         temperaturaRaw = 0;
+     TOF = 0;
+     temperaturaRaw = 0;
      //Comunicacion RS485:
      banRSI = 0;
      banRSC = 0;
@@ -204,9 +204,10 @@ void ConfiguracionPrincipal(){
      //Configuracion de puertos:
      AD1PCFGL = 0xFFFD;                                                         //Configura el puerto AN1 como entrada analogica y todas las demas como digitales
      TRISA1_bit = 1;                                                            //Establece el pin RA1 como entrada
-     TRISB = 0xFF40;                                                            //TRISB = 11111111 01000000
+     //TRISB = 0xFF40;                                                            //TRISB = 11111111 01000000
      MSRS485_Direction = 0;                                                     //MSRS485 out
      TEST_Direction = 0;                                                        //Test out
+     
      //Configuracion del ADC:
      AD1CON1.AD12B = 0;                                                         //Configura el ADC en modo de 10 bits
      AD1CON1bits.FORM = 0x00;                                                   //Formato de la canversion: 00->(0_1023)|01->(-512_511)|02->(0_0.999)|03->(-1_0.999)
@@ -417,13 +418,13 @@ unsigned int LeerDS18B20(){
 void ProbarMuestreo(){
 
      TEST = 1;
-
+     bm = 0;
+     i = 0;
      TMR1 = 0;                                                                  //Encera el TMR1
      T1CON.TON = 1;                                                             //Enciende el TMR1
-     bm = 0;
-     i = 0;                                                                     //Limpia las variables asociadas al almacenamiento de la señal muestreada
      while(bm!=1);
-
+     TEST = 0;
+     
 }
 
 
@@ -432,17 +433,17 @@ void ProbarMuestreo(){
 void CapturarMuestras(){
 
      TEST = 1;
-
      // Generacion de pulsos y captura de la señal de retorno:
-     bm = 0;
      contPulsos = 0;                                                            //Limpia la variable del contador de pulsos
      RB2_bit = 0;                                                               //Limpia el pin que produce los pulsos de exitacion del transductor
+     bm = 0;
+     i = 0;
      T1CON.TON = 0;                                                             //Apaga el TMR1
      TMR2 = 0;                                                                  //Encera el TMR2
      T2CON.TON = 1;                                                             //Enciende el TMR2
-     i = 0;                                                                     //Limpia las variables asociadas al almacenamiento de la señal muestreada
      while(bm!=1); 
-
+     TEST = 0;
+     
 }
 
 

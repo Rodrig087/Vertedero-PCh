@@ -59,9 +59,11 @@ void EnviarSolicitud(unsigned short id, unsigned short funcion, unsigned short s
 void Salir();						
 
 
-int main() {
+//int main(int argc, char *argv[]){
+int main(){
 
 	//printf("Iniciando...\n");
+	//subFuncionPet = (char)(atoi(argv[1]));
   
 	//Inicializa las variables:
 	i = 0;

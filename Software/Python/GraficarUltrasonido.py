@@ -17,6 +17,8 @@ path = "/home/rsa/Resultados/C01N03_us.dat"
 f = open(path, "rb")
 tramaDatosShort = np.fromfile(f, np.int8, sizeTramaShort)
 
+print("Graficando... ") 
+
 #*****************************************************************************
 #Obtiene los bytes de temperatura de la trama:
 temperaturaLSB = tramaDatosShort[sizeTramaShort - 2]
@@ -51,7 +53,7 @@ for i in range(0, sizeTramaInt - 1):
 
 datoPrueba = tramaDatosInt[184]
 
-print("   DatoInt LSB: " + hex(datoPrueba))
+#print("   DatoInt LSB: " + hex(datoPrueba))
 
 plt.plot(tramaDatosInt)
 plt.show()

@@ -164,6 +164,7 @@ void ImprimirInformacion(){
 	*/
 			
 	LeerTemperaturaSensor(payloadResp, numDatosResp);
+	system("python3 GraficarUltrasonido.py");
 			
 	Salir();
 	
@@ -242,8 +243,7 @@ void RecibirRespuesta(){
 	RecibirPyloadRespuesta(numDatosResp, payloadResp);	
 	CrearArchivo(IDConcentrador, idResp);
 	GuardarTrama(payloadResp, numDatosResp);
-	//system("python3 GraficarUltrasonido.py");
-	
+		
 				
 	//Apaga el LEDTEST:
 	digitalWrite (LEDTEST, LOW);
