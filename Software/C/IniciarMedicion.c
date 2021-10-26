@@ -59,11 +59,11 @@ void EnviarSolicitud(unsigned short id, unsigned short funcion, unsigned short s
 void Salir();						
 
 
-//int main(int argc, char *argv[]){
-int main(){
+int main(int argc, char *argv[]){
+//int main(){
 
 	//printf("Iniciando...\n");
-	//subFuncionPet = (char)(atoi(argv[1]));
+	subFuncionPet = (char)(atoi(argv[1]));
   
 	//Inicializa las variables:
 	i = 0;
@@ -75,7 +75,7 @@ int main(){
 	//Datos de prueba:
 	idPet = 3;
 	funcionPet = 1;
-	subFuncionPet = 1;
+	//subFuncionPet = 1;
 	numDatosPet = 0;
 		
 	//Variables para convertir la temperatura:

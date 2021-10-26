@@ -7,8 +7,6 @@ main
 			_Multiply_32x32
 			_Modulus_32x32
 			_Divide_32x32
-UART1Interrupt
-	UART1_Read
 	ProcesarSolicitud
 		LeerDS18B20
 			Ow_Reset
@@ -45,5 +43,7 @@ UART1Interrupt
 			EnviarTramaRS485
 		GenerarTramaPrueba
 			EnviarTramaRS485
+UART1Interrupt
+	UART1_Read
 Timer2Interrupt
 Timer1Interrupt

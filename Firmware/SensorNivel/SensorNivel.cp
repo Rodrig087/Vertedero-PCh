@@ -146,6 +146,9 @@ float T2, TOF;
 unsigned int temperaturaRaw;
 
 
+unsigned char banderaPeticion;
+
+
 
 
 
@@ -192,6 +195,7 @@ void main() {
  MSRS485 = 0;
 
 
+ banderaPeticion = 0;
 
 
  TEST = 0;
@@ -199,10 +203,13 @@ void main() {
  ip=0;
 
 
+ while(1){
+ if (banderaPeticion==1){
 
+ ProcesarSolicitud(solicitudCabeceraRS485, solicitudPyloadRS485);
 
-
-
+ }
+ }
 
 
 }
@@ -223,10 +230,9 @@ void ConfiguracionPrincipal(){
 
  AD1PCFGL = 0xFFFD;
  TRISA1_bit = 1;
-
+ TRISB = 0xFF40;
  MSRS485_Direction = 0;
  TEST_Direction = 0;
-
 
  AD1CON1.AD12B = 0;
  AD1CON1bits.FORM = 0x00;
@@ -380,6 +386,8 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  break;
  }
 
+ banderaPeticion = 0;
+
 }
 
 
@@ -437,11 +445,13 @@ unsigned int LeerDS18B20(){
 void ProbarMuestreo(){
 
  TEST = 1;
- bm = 0;
- i = 0;
+
  TMR1 = 0;
  T1CON.TON = 1;
+ bm = 0;
+ i = 0;
  while(bm!=1);
+
  TEST = 0;
 
 }
@@ -453,14 +463,16 @@ void CapturarMuestras(){
 
  TEST = 1;
 
+
+ bm = 0;
  contPulsos = 0;
  RB2_bit = 0;
- bm = 0;
- i = 0;
  T1CON.TON = 0;
  TMR2 = 0;
  T2CON.TON = 1;
+ i = 0;
  while(bm!=1);
+
  TEST = 0;
 
 }
@@ -690,7 +702,9 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
  if (banRSC==1){
  Delay_ms(100);
 
- ProcesarSolicitud(solicitudCabeceraRS485, solicitudPyloadRS485);
+
+
+ banderaPeticion = 1;
 
  banRSC = 0;
  }
