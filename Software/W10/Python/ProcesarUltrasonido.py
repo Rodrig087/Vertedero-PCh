@@ -1,14 +1,43 @@
-from matplotlib.widgets import Cursor
+#from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
 import numpy as np
-import time
-import os
-import errno
+from scipy.signal import hilbert
+#import time
+#import os
+#import errno
 
 #Variables:
 sizeTramaShort = 702
 sizeTramaInt = 350
 tramaDatosInt = []
+
+#Funciones:
+def CalcularValorAbsoluto(arrayMuestras):
+    #Convierte el array a formato np:
+    npMuestras = np.array(arrayMuestras)
+    #Calcula la media:
+    meanMuestras = np.mean(npMuestras)
+    #meanMuestras = 508 #Medido con el osciloscopio
+    print(meanMuestras)
+    #Realiza el offset de la señal:
+    npMuestras = npMuestras - meanMuestras
+    #Calcula el valora absoluto de la señal:
+    abMuestras = abs(npMuestras)
+    return abMuestras
+    #plt.plot(abMuestras)
+    #plt.show()
+
+def FiltrarSenal(senal):
+    print("Filtrando...")
+    npSignal = np.array(senal)
+    analytic_signal = hilbert(npSignal)
+    #amplitude_envelope = np.abs(analytic_signal) 
+    plt.plot(npSignal, label='signal')
+    plt.plot(analytic_signal, label='envelope')
+    plt.show()
+
+    
+
 #Ingreso de datos:
 nombreArchivo = input("Ingrese el nombre del archivo: ")
 
@@ -49,9 +78,15 @@ for i in range(0, sizeTramaInt - 1):
     datoInt = ((datoIntMSB << 8) & 0xFF00) + ((datoIntLSB) & 0xFF)
     tramaDatosInt.append(datoInt)
 
-datoPrueba = tramaDatosInt[184]
-
-print("   DatoInt: " + hex(datoPrueba))
+# datoPrueba = tramaDatosInt[184]
+# print("   DatoInt: " + hex(datoPrueba))
 
 plt.plot(tramaDatosInt)
 plt.show()
+
+#Procesamiento de la señal:
+banProcesar =  input("Desea extraer el evento? s/n: ")
+if (banProcesar=='s'):
+    print('Procesando...')
+    arraySenal = CalcularValorAbsoluto(tramaDatosInt)
+    FiltrarSenal(arraySenal)
