@@ -156,12 +156,12 @@ void ImprimirInformacion(){
 	//Imprime la respuesta:
 	printf("\nTrama recibida:");
 	printf("\n Cabecera: %d %d %d %d", idResp, funcionResp, subFuncionResp, numDatosResp);
-	/*
-	printf("\n Payload: ");
-	for (i=0;i<numDatosResp;i++){
-		printf("%#02X ", payloadResp[i]);
-	}
-	*/
+	
+	//printf("\n Payload: ");
+	//for (i=0;i<numDatosResp;i++){
+	//	printf("%#02X ", payloadResp[i]);
+	//}
+	
 			
 	LeerTemperaturaSensor(payloadResp, numDatosResp);
 	system("python3 GraficarUltrasonido.py");

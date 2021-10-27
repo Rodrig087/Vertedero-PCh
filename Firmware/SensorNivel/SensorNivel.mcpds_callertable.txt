@@ -36,6 +36,7 @@ main
 			_AddSub_FP
 		CapturarMuestras
 		ProbarMuestreo
+		ProbarEnvioTrama
 		EnviarTramaRS485
 			UART1_Write
 			UART1_Tx_Idle

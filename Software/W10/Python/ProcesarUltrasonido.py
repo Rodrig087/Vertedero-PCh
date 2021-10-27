@@ -1,23 +1,21 @@
-#from matplotlib.widgets import Cursor
+from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
 import numpy as np
 import time
 import os
-#import errno
+import errno
 
 #Variables:
 sizeTramaShort = 702
 sizeTramaInt = 350
 tramaDatosInt = []
 #Ingreso de datos:
-#nombreArchivo = input("Ingrese el nombre del archivo: ")
+nombreArchivo = input("Ingrese el nombre del archivo: ")
 
 #Abre el archivo binario:
-path = "/home/rsa/Resultados/C01N03_us.dat"
+path = str(nombreArchivo) + ".dat"
 f = open(path, "rb")
 tramaDatosShort = np.fromfile(f, np.int8, sizeTramaShort)
-
-print("Graficando... ") 
 
 #*****************************************************************************
 #Obtiene los bytes de temperatura de la trama:

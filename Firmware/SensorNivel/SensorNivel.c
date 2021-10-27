@@ -3,7 +3,7 @@ Autor: Milton Munoz
 Fecha de creacion: 21/09/09
 Configuracion: dsPIC P33FJ32MC202, XT=8MHz, PLL=80MHz
 Observaciones:
-1. Redise?o del firmware del sensor de nivel elaborado para el proyecto de tesis elaborado el 17/01/13
+1. Rediseno del firmware del sensor de nivel elaborado para el proyecto de tesis elaborado el 17/01/13
 2. En esta version el calculo del caudal se hace en la Raspberry Pi.
 3. En la version del 21-10-06 se establecio que el sensor envie los datos de T2 y temperatura_raw.
    Tambien permite enviar el vector de muestras y el vector de deteccion de envolvente.
@@ -13,7 +13,7 @@ Observaciones:
 Descripcion:
 Funcion1: Inicio de medicion, Payload[TiempoSeg]??
            Subfuncion1: Calcula el TOF y lee el sensor de temperatura.
-                   Subfuncion2: Captura la se?al ultrasonica y lee el sensor de temperatura.
+                   Subfuncion2: Captura la senal ultrasonica y lee el sensor de temperatura.
 Funcion2: Lectura de datos:
            Subfuncion1: Payload[t2Prom(4bytes) + tempRaw(2bytes)]
            Subfuncion2: vectorMuestras[700bytes]
@@ -83,17 +83,17 @@ unsigned char ir, ip, ipp;                             //Subindices para las tra
 //Variables para la generacion de pulsos de exitacion del transductor ultrasonico
 unsigned int contPulsos;
 
-//Variables para el almacenamiento de la se?al muestreada:
+//Variables para el almacenamiento de la senal muestreada:
 const unsigned int numeroMuestras = 350;
 unsigned int vectorMuestras[350];
 //unsigned char outputPyloadRS485[400];
 unsigned int k;
 char bm;
 
-//Variables para la deteccion de la Envolvente de la se?al
+//Variables para la deteccion de la Envolvente de la senal
 unsigned int valorAbsoluto;
 
-//Variables para el filtrado de la se?al
+//Variables para el filtrado de la senal
 float x0=0, x1=0, x2=0, y0=0, y1=0, y2=0;
 const unsigned char O = 21;
 float XFIR[O];
@@ -142,7 +142,8 @@ void ProbarMuestreo();
 void CapturarMuestras();
 void ProcesarMuestras();
 float CalcularTOF();
-void EnviarTramaInt(unsigned char*, unsigned char*,unsigned int temperatura);
+void EnviarTramaInt(unsigned char* cabecera, unsigned int temperatura);
+void ProbarEnvioTrama();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -217,15 +218,15 @@ void ConfiguracionPrincipal(){
      //Configuracion del ADC:
      AD1CON1.AD12B = 0;                                                         //Configura el ADC en modo de 10 bits
      AD1CON1bits.FORM = 0x00;                                                   //Formato de la canversion: 00->(0_1023)|01->(-512_511)|02->(0_0.999)|03->(-1_0.999)
-     AD1CON1.SIMSAM = 0;                                                        //0 -> Muestrea m?ltiples canales individualmente en secuencia
+     AD1CON1.SIMSAM = 0;                                                        //0 -> Muestrea multiples canales individualmente en secuencia
      AD1CON1.ADSIDL = 0;                                                        //Continua con la operacion del modulo durante el modo desocupado
      AD1CON1.ASAM = 1;                                                          //Muestreo automatico
      AD1CON1bits.SSRC = 0x00;                                                   //Conversion manual
      AD1CON2bits.VCFG = 0;                                                      //Selecciona AVDD y AVSS como fuentes de voltaje de referencia
      AD1CON2bits.CHPS = 0;                                                      //Selecciona unicamente el canal CH0
      AD1CON2.CSCNA = 0;                                                         //No escanea las entradas de CH0 durante la Muestra A
-     AD1CON2.BUFM = 0;                                                          //Bit de selecci?n del modo de relleno del b?fer, 0 -> Siempre comienza a llenar el buffer desde el principio
-     AD1CON2.ALTS = 0x00;                                                       //Utiliza siempre la selecci?n de entrada de canal para la muestra A
+     AD1CON2.BUFM = 0;                                                          //Bit de seleccion del modo de relleno del bufer, 0 -> Siempre comienza a llenar el buffer desde el principio
+     AD1CON2.ALTS = 0x00;                                                       //Utiliza siempre la seleccion de entrada de canal para la muestra A
      AD1CON3.ADRC = 0;                                                          //Selecciona el reloj de conversion del ADC derivado del reloj del sistema
      AD1CON3bits.ADCS = 0x02;                                                   //Configura el periodo del reloj del ADC fijando el valor de los bits ADCS segun la formula: TAD = TCY*(ADCS+1) = 75ns  -> ADCS = 2
      AD1CON3bits.SAMC = 0x02;                                                   //Auto Sample Time bits, 2 -> 2*TAD (minimo periodo de muestreo para 10 bits)
@@ -297,7 +298,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          TOF = CalcularTOF();
                          break;
                     case 2:
-                         //Realiza una medicion de temperatura y captura la se?al ultrasonica
+                         //Realiza una medicion de temperatura y captura la senal ultrasonica
                          temperaturaRaw = LeerDS18B20();
                          CapturarMuestras();
                          break;
@@ -305,6 +306,12 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          //Prueba el ADC:
                          temperaturaRaw = LeerDS18B20();
                          ProbarMuestreo();
+                         break;
+                         
+                    case 4:
+                         //Prueba que este bien el llenado de la trama:
+                         temperaturaRaw = LeerDS18B20();
+                         ProbarEnvioTrama();
                          break;
                     default:
                          //Realiza una medicion de temperatura y TOF:
@@ -340,7 +347,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          numDatosResp = 702;
                          cabeceraSolicitud[3] = *(ptrNumDatosResp);
                          cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
-                         EnviarTramaInt(cabeceraSolicitud,vectorMuestras,temperaturaRaw);
+                         EnviarTramaInt(cabeceraSolicitud, temperaturaRaw);
                          break;
                }
                break;
@@ -422,7 +429,27 @@ unsigned int LeerDS18B20(){
 }
 
 //*****************************************************************************************************************************************
-//Funcion para capturar la se?al ultrasonica
+//Funcion para capturar la senal ultrasonica
+void ProbarEnvioTrama(){
+
+     TEST = 1;
+     
+     i = 0;
+     while (i<numeroMuestras){
+        vectorMuestras[j] = 500;                                           //Almacena el valor actual de la conversion del ADC en el vectorMuestras
+        i++;                                                                    //Aumenta en 1 el subindice del vector de Muestras
+     }
+     
+     TEST = 0;
+     delay_ms(200);
+     TEST = 1;
+     delay_ms(200);
+     TEST = 0;
+     
+}
+
+//*****************************************************************************************************************************************
+//Funcion para capturar la senal ultrasonica
 void ProbarMuestreo(){
 
      TEST = 1;
@@ -439,19 +466,19 @@ void ProbarMuestreo(){
 
 
 //*****************************************************************************************************************************************
-//Funcion para capturar la se?al ultrasonica
+//Funcion para capturar la senal ultrasonica
 void CapturarMuestras(){
 
      TEST = 1;
 
-     // Generacion de pulsos y captura de la se?al de retorno:
+     // Generacion de pulsos y captura de la senal de retorno:
      bm = 0;
      contPulsos = 0;                                                            //Limpia la variable del contador de pulsos
      RB2_bit = 0;                                                               //Limpia el pin que produce los pulsos de exitacion del transductor
      T1CON.TON = 0;                                                             //Apaga el TMR1
      TMR2 = 0;                                                                  //Encera el TMR2
      T2CON.TON = 1;                                                             //Enciende el TMR2
-     i = 0;                                                                     //Limpia las variables asociadas al almacenamiento de la se?al muestreada
+     i = 0;                                                                     //Limpia las variables asociadas al almacenamiento de la senal muestreada
      while(bm!=1);
 
      TEST = 0;
@@ -460,25 +487,25 @@ void CapturarMuestras(){
 
 
 //*****************************************************************************************************************************************
-//Funcion capturar y procesar la se?al ultrasonica
+//Funcion capturar y procesar la senal ultrasonica
 void ProcesarMuestras(){
 
      TEST = 1;
 
-     // Generacion de pulsos y captura de la se?al de retorno:
+     // Generacion de pulsos y captura de la senal de retorno:
      bm = 0;
      contPulsos = 0;                                                            //Limpia la variable del contador de pulsos
      RB2_bit = 0;                                                               //Limpia el pin que produce los pulsos de exitacion del transductor
      T1CON.TON = 0;                                                             //Apaga el TMR1
      TMR2 = 0;                                                                  //Encera el TMR2
      T2CON.TON = 1;                                                             //Enciende el TMR2
-     i = 0;                                                                     //Limpia las variables asociadas al almacenamiento de la se?al muestreada
+     i = 0;                                                                     //Limpia las variables asociadas al almacenamiento de la senal muestreada
      while(bm!=1);                                                              //Espera hasta que haya terminado de enviar y recibir todas las muestras
 
-     // Procesamiento de la se?al capturada:
+     // Procesamiento de la senal capturada:
      if (bm==1){
 
-          //Determinacion de la amplitud media de la se?al:                     //**Esta parte podria revisar. Es realmente necesario considerar la parte negativa de la se?al?
+          //Determinacion de la amplitud media de la senal:                     //**Esta parte podria revisar. Es realmente necesario considerar la parte negativa de la senal?
           Mmed = 508;                                                           //Medido con el osciloscopio: Vmean = 1.64V => 508.4adc
 
           for (k=0;k<numeroMuestras;k++){
@@ -490,23 +517,23 @@ void ProcesarMuestras(){
               }
 
               //Filtrado
-              //Corrimiento continuo de la se?al x[n]
+              //Corrimiento continuo de la senal x[n]
               for( f=O-1; f!=0; f-- ) XFIR[f]=XFIR[f-1];
-              //Adquisici?n de una muestra de 10 bits en, x[0]
+              //Adquisicion de una muestra de 10 bits en, x[0]
               XFIR[0] = (float)(valorAbsoluto);
-              //Convoluci?n contin?a.
+              //Convolucion continua.
               y0 = 0.0; for( f=0; f<O; f++ ) y0 += h[f]*XFIR[f];
 
-              YY = (unsigned int)(y0);                                          //Reconstrucci?n de la se?al: y en 10 bits.
+              YY = (unsigned int)(y0);                                          //Reconstruccion de la senal: y en 10 bits.
               vectorMuestras[k] = YY;
 
           }
 
-          bm = 2;                                                               //Cambia el estado de la bandera bm para dar paso al c?lculo del pmax y TOF
+          bm = 2;                                                               //Cambia el estado de la bandera bm para dar paso al calculo del pmax y TOF
 
       }
 
-      // C?lculo del punto maximo y TOF
+      // Calculo del punto maximo y TOF
       if (bm==2){
 
          yy1 = Vector_Max(vectorMuestras, numeroMuestras, &maxIndex);                                    //Encuentra el valor maximo del vector R
@@ -568,20 +595,21 @@ float CalcularTOF(){
 
 //*****************************************************************************************************************************************
 //Funcion para enviar la trama de datos tipo int:
-void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt, unsigned int temperatura){
+//void EnviarTramaInt(unsigned char* cabecera, unsigned int* tramaInt, unsigned int temperatura){
+void EnviarTramaInt(unsigned char* cabecera, unsigned int temperatura){
 
      //Variables:
      unsigned char tramaShort[705];
      unsigned int valorInt;
      unsigned char *ptrValorInt, *ptrTemperatura;
 
-         //Asignacion de punteros:
+     //Asignacion de punteros:
      ptrValorInt = (unsigned char *) & valorInt;
      ptrTemperatura = (unsigned char *) & temperatura;
 
      //Convierte el vector de enteros en un vector de char:
      for (j=0;j<numeroMuestras;j++){
-          valorInt = tramaInt[j];
+          valorInt = vectorMuestras[j];
           tramaShort[j*2] = *(ptrValorInt);
           tramaShort[(j*2)+1] = *(ptrValorInt+1);
      }
@@ -591,7 +619,6 @@ void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt, unsigned i
      tramaShort[701] = *(ptrTemperatura+1);
 
      //Actualiza la cabecera y envia la trama por RS485:
-     //cabecera[3] = numeroMuestras*2;                                                  //Actualiza el numero de datos de la cabecera
      EnviarTramaRS485(1, cabecera, tramaShort);
 
 }
@@ -609,7 +636,7 @@ void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
         vectorMuestras[i] = ADC1BUF0;                                           //Almacena el valor actual de la conversion del ADC en el vectorMuestras
         i++;                                                                    //Aumenta en 1 el subindice del vector de Muestras
      } else {
-        bm = 1;                                                                 //Cambia el valor de la bandera bm para terminar con el muestreo y dar comienzo al procesamiento de la se?al
+        bm = 1;                                                                 //Cambia el valor de la bandera bm para terminar con el muestreo y dar comienzo al procesamiento de la senal
         T1CON.TON = 0;                                                          //Apaga el TMR1
      }
      T1IF_bit = 0;                                                              //Limpia la bandera de interrupcion por desbordamiento del TMR1

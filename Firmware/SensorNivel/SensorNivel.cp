@@ -161,7 +161,8 @@ void ProbarMuestreo();
 void CapturarMuestras();
 void ProcesarMuestras();
 float CalcularTOF();
-void EnviarTramaInt(unsigned char*, unsigned char*,unsigned int temperatura);
+void EnviarTramaInt(unsigned char* cabecera, unsigned int temperatura);
+void ProbarEnvioTrama();
 
 
 
@@ -325,6 +326,12 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  temperaturaRaw = LeerDS18B20();
  ProbarMuestreo();
  break;
+
+ case 4:
+
+ temperaturaRaw = LeerDS18B20();
+ ProbarEnvioTrama();
+ break;
  default:
 
  temperaturaRaw = LeerDS18B20();
@@ -359,7 +366,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  numDatosResp = 702;
  cabeceraSolicitud[3] = *(ptrNumDatosResp);
  cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
- EnviarTramaInt(cabeceraSolicitud,vectorMuestras,temperaturaRaw);
+ EnviarTramaInt(cabeceraSolicitud, temperaturaRaw);
  break;
  }
  break;
@@ -437,6 +444,26 @@ unsigned int LeerDS18B20(){
  temperaturaCrudo = temp;
 
  return temperaturaCrudo;
+
+}
+
+
+
+void ProbarEnvioTrama(){
+
+ TEST = 1;
+
+ i = 0;
+ while (i<numeroMuestras){
+ vectorMuestras[j] = 500;
+ i++;
+ }
+
+ TEST = 0;
+ delay_ms(200);
+ TEST = 1;
+ delay_ms(200);
+ TEST = 0;
 
 }
 
@@ -587,7 +614,8 @@ float CalcularTOF(){
 
 
 
-void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt, unsigned int temperatura){
+
+void EnviarTramaInt(unsigned char* cabecera, unsigned int temperatura){
 
 
  unsigned char tramaShort[705];
@@ -600,7 +628,7 @@ void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt, unsigned i
 
 
  for (j=0;j<numeroMuestras;j++){
- valorInt = tramaInt[j];
+ valorInt = vectorMuestras[j];
  tramaShort[j*2] = *(ptrValorInt);
  tramaShort[(j*2)+1] = *(ptrValorInt+1);
  }
@@ -608,7 +636,6 @@ void EnviarTramaInt(unsigned char* cabecera, unsigned char* tramaInt, unsigned i
 
  tramaShort[700] = *(ptrTemperatura);
  tramaShort[701] = *(ptrTemperatura+1);
-
 
 
  EnviarTramaRS485(1, cabecera, tramaShort);
