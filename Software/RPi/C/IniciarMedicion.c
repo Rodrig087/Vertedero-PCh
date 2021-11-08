@@ -1,5 +1,6 @@
 //Compilar:
 //gcc IniciarMedicion.c -o iniciarmedicion -lbcm2835 -lwiringPi 
+//gcc IniciarMedicion.c -o /home/rsa/Ejecutables/iniciarmedicion -lbcm2835 -lwiringPi
 
 /*-------------------------------------------------------------------------------------------------------------------------
 Autor: Milton Munoz

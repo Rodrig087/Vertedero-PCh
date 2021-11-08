@@ -1,5 +1,6 @@
 //Compilar:
 //gcc InspeccionarUltrasonido.c -o inspeccionarultrasonido -lbcm2835 -lwiringPi 
+//gcc InspeccionarUltrasonido.c -o /home/rsa/Ejecutables/inspeccionarultrasonido -lbcm2835 -lwiringPi 
 
 /*-------------------------------------------------------------------------------------------------------------------------
 Autor: Milton Munoz
@@ -164,7 +165,7 @@ void ImprimirInformacion(){
 	
 			
 	LeerTemperaturaSensor(payloadResp, numDatosResp);
-	system("python3 GraficarUltrasonido.py");
+	//system("python3 GraficarUltrasonido.py");
 			
 	Salir();
 	
@@ -278,16 +279,31 @@ void RecibirPyloadRespuesta(unsigned int numBytesPyload, unsigned char* pyloadRS
 
 void CrearArchivo(unsigned short idConc, unsigned short idNodo){
 
-	char nombreArchivo[50];
+	char nombreArchivo[60];
 	char idArchivo[10];
+	char tiempoMedicion[7];
+	char tiempoMedicionStr[25];
 	char ext[5];
-		
 	
+	//Obtiene la hora y la fecha del sistema:
+	time_t t;
+	struct tm *tm;
+	t=time(NULL);
+	tm=localtime(&t);
+	tiempoMedicion[0] = tm->tm_year-100;											//Anio (contado desde 1900)
+	tiempoMedicion[1] = tm->tm_mon+1;												//Mes desde Enero (0-11)
+	tiempoMedicion[2] = tm->tm_mday;												//Dia del mes (0-31)
+	tiempoMedicion[3] = tm->tm_hour;												//Hora
+	tiempoMedicion[4] = tm->tm_min;													//Minuto
+	tiempoMedicion[5] = tm->tm_sec;													//Segundo 
+			
 	//Realiza la concatenacion para obtner el nombre del archivo:			
-	strcpy(nombreArchivo, "/home/rsa/Resultados/");
-	sprintf(idArchivo, "C%0.2dN%0.2d_us", idConc, idNodo); 
+	strcpy(nombreArchivo, "/home/rsa/Mediciones/Vertederos/");
+	sprintf(idArchivo, "C%0.2dN%0.2d_", idConc, idNodo); 
+	sprintf(tiempoMedicionStr, "%0.2d%0.2d%0.2d-%0.2d%0.2d%0.2d", tiempoMedicion[0], tiempoMedicion[1], tiempoMedicion[2], tiempoMedicion[3], tiempoMedicion[4], tiempoMedicion[5]);
 	strcpy(ext, ".dat");
 	strcat(nombreArchivo, idArchivo);
+	strcat(nombreArchivo, tiempoMedicionStr);
 	strcat(nombreArchivo, ext); 
 	
 	//Crea el archivo binario:
