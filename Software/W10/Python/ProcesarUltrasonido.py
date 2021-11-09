@@ -4,6 +4,7 @@ import numpy as np
 from scipy.signal import hilbert,butter,filtfilt,find_peaks
 from scipy.interpolate import lagrange
 from scipy import signal
+
 #import time
 #import os
 #import errno
@@ -104,7 +105,9 @@ def CalcularPico(data):
 nombreArchivo = input("Ingrese el nombre del archivo: ")
 
 #Abre el archivo binario:
-path = "Datos/" + str(nombreArchivo) + ".dat"
+rutaCarpeta = "C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
+path = rutaCarpeta + str(nombreArchivo) + ".dat"
+
 f = open(path, "rb")
 tramaDatosShort = np.fromfile(f, np.int8, sizeTramaShort)
 
