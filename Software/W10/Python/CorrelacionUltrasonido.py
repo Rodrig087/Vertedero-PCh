@@ -15,7 +15,7 @@ sizeTramaInt = 350
 periodoMuestreo = 5
 
 #Variables:
-factorResample = 2
+factorResample = 10
 periodoResample = periodoMuestreo/factorResample
 dix = 25*factorResample
 senal1 = []
@@ -38,11 +38,13 @@ def RemuestrearOffset(arrayMuestras):
         
     
 #Ingreso de datos:
-nombreArchivo1 = input("Ingrese el nombre del primer archivo: ")
+#nombreArchivo1 = input("Ingrese el nombre del primer archivo: ")
+nombreArchivo1 = "C01N03_211028_02"
 nombreArchivo2 = input("Ingrese el nombre del segundo archivo: ")
 
 #Abre el archivo binario:
-rutaCarpeta = "C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
+#rutaCarpeta = "C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
+rutaCarpeta = "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
 path1 = rutaCarpeta + str(nombreArchivo1) + ".dat"
 path2 = rutaCarpeta + str(nombreArchivo2) + ".dat"
 
@@ -76,19 +78,32 @@ for i in range(0, sizeTramaInt - 1):
 #banProcesar =  input("Desea extraer el evento? s/n: ")
 banProcesar = 's'
 if (banProcesar=='s'):
+    
     print('Procesando...')
-    #offsetSenal = RemuestrearOffset(tramaDatosInt)
+    
+    #Normaliza las senales:
+    senal1 = RemuestrearOffset(senal1)
+    senal2 = RemuestrearOffset(senal2)
+    nsamples = np.size(senal1)
+    
+    # Ejemplo: Put in an artificial time shift between the two datasets
+    #time_shift = 18
+    #senal2 = np.roll(senal2, time_shift)
     
     #Calcula la correlacion cruzada:
-    nsamples = np.size(senal1)
-    # Find cross-correlation
     xcorr = correlate(senal1, senal2)
+    #xcorr = np.correlate([1, 2, 3], [0, 1, 0.5])
     # delta time array to match xcorr
     dt = np.arange(1-nsamples, nsamples)
     recovered_time_shift = dt[xcorr.argmax()]
+    #print (xcorr[recovered_time_shift ])
     print("Recovered time shift: %d" % recovered_time_shift)    
+    print("Periodo muestreo [us]: %f" % (periodoResample)) 
+    print("Desfase [us]: %f" % (recovered_time_shift*-1*periodoResample)) 
     
     #Graficar:
     plt.plot(senal1)
     plt.plot(senal2)
+    #plt.phase_spectrum(senal1)
+    #plt.phase_spectrum(senal2)
     plt.show()
