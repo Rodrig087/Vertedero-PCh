@@ -45,5 +45,30 @@ referencia = butter_bandpass_filter(sig, 39000, 41000, 400000, 5)
 #referencia = signal.resample(referencia, 350)
 referencia = referencia*1000
 
+#******************************************************************************
+#Senal sinusoidal:
+def sin_wave(A, f, fs, phi, t):
+    '''
+    : Params A: Amplitud
+         : params F: Frecuencia de señal
+         : Params FS: Frecuencia de muestreo
+         : Params phi: fase
+         : params t: longitud de tiempo
+    '''
+    # Si la longitud de la serie de tiempo es T = 1S, 
+    # Frecuencia de muestreo FS = 1000 Hz, intervalo de tiempo de muestreo TS = 1/FS = 0.001S
+    # Para los puntos de muestreo de la secuencia de tiempo es n = t / t ts = 1 / 0,001 = 1000, hay 1000 puntos, cada intervalo de punto es TS
+    Ts = 1/fs
+    n = t / Ts
+    n = np.arange(n)
+    y = A*np.sin(2*np.pi*f*n*Ts + phi*(np.pi/180))
+    return y
+
+fs = 200000
+hz_50 = sin_wave(A=1, f=40000, fs=200000, phi=0, t=0.000025)
+plt.plot(hz_50)
+#******************************************************************************
+
 #plt.plot(sig)
-plt.plot(referencia)
+#plt.plot(referencia)
+
