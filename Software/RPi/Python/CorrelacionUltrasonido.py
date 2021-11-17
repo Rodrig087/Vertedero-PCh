@@ -127,7 +127,7 @@ referencia3 = sin_wave(A=200, f=40000, fs=200000, phi=0, t=0.00175)
 nombreArchivo2 = input("Ingrese el nombre del segundo archivo: ")
 
 #Abre el archivo binario:
-rutaCarpeta = "/home/rsa/Programas/Python/Datos/"
+rutaCarpeta = "/home/rsa/Mediciones/Vertederos/"
 path2 = rutaCarpeta + str(nombreArchivo2) + ".dat"
 
 #*****************************************************************************
