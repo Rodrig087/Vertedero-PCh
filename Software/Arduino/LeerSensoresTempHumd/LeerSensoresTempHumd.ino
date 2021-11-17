@@ -16,19 +16,19 @@
 //const int pinDatosDQ = 9;
 
 //Variables:
-int tempDHT;
+float tempDHT;
 int humdDHT;
 float tempDS;
 
 int opcion = 1;
 boolean ban1 = 0;
 
-byte tempDHT_max;
-byte tempDHT_min;
-byte humdDHT_max;
-byte humdDHT_min;
-byte tempDS_max;
-byte tempDS_min;
+float tempDHT_max;
+float tempDHT_min;
+float humdDHT_max;
+float humdDHT_min;
+float tempDS_max;
+float tempDS_min;
 byte Direccion=0;
 
 String Datos;
@@ -62,44 +62,44 @@ void setup() {
   //**La medicion de temperatura del DS18B20 requiere 2 bytes por ser en float. 
   //Hay que usar punteros para guardar este valor en la EEPROM. Muy complicado para ser una simple prueba.
   //sensorDS18B20.requestTemperatures();
-  //tempDS_max = sensorDS18B20.getTempCByIndex(0);
-  //tempDS_min = sensorDS18B20.getTempCByIndex(0);
+  tempDS_max = 0;
+  tempDS_min = 99;
   
   //Guarda los valores leidos en la EEPROM:  
-  EEPROM.write(Direccion,tempDHT_max);
-  EEPROM.write(Direccion+1,tempDHT_min);
-  EEPROM.write(Direccion+2,humdDHT_max);
-  EEPROM.write(Direccion+3,humdDHT_min);
+  //EEPROM.write(Direccion,tempDHT_max);
+  //EEPROM.write(Direccion+1,tempDHT_min);
+  //EEPROM.write(Direccion+2,humdDHT_max);
+  //EEPROM.write(Direccion+3,humdDHT_min);
       
   display.setContrast(50);
    
 }
 
-void Portada(int tDHT, int hDHT, float tDS){
+void Portada(float tDHT, int hDHT, float tDS){
 	
 //Imprime en el display los valores actuales del DHT22 y del DS18B20:  
 
-  String temp_act = " "+String(tDHT)+ " C";
-  String humd_act = " "+String(hDHT)+ " %";
-  String tempDS_act = " "+String(tDS)+ " C";
+  String temp_act = " "+String(tDHT)+ "C";
+  String humd_act = " "+String(hDHT)+ "%";
+  String tempDS_act = " "+String(tDS)+ "C";
    
   display.setTextSize(1);
   
   display.setCursor(0,5);
   display.setTextColor(WHITE, BLACK);
-  display.print(" Temp DHT:");
+  display.print("Temp DHT:");
   display.setTextColor(BLACK);
   display.println(temp_act);
   
   display.setCursor(0,15);
   display.setTextColor(WHITE, BLACK);
-  display.print(" Humd DHT:");
+  display.print("Humd DHT:");
   display.setTextColor(BLACK);
   display.println(humd_act);
   
   display.setCursor(0,25);
   display.setTextColor(WHITE, BLACK);
-  display.print(" Temp DS:");
+  display.print("Temp DS:");
   display.setTextColor(BLACK);
   display.println(tempDS_act);
       
@@ -108,7 +108,7 @@ void Portada(int tDHT, int hDHT, float tDS){
   
 }
 
-void DisplayTemperatura(int t, int t_max, int t_min){
+void DisplayTemperatura(float t, float t_max, float t_min){
 	
 //Imprime en el display la temperatura actual, la maxima y la minima
 
@@ -117,9 +117,9 @@ void DisplayTemperatura(int t, int t_max, int t_min){
   String temp_min = " "+String(t_min)+ " C";
   
   display.setTextSize(1);
-  display.setCursor(4,5);
+  display.setCursor(14,5);
   display.setTextColor(WHITE, BLACK);
-  display.print(" Temperatura DHT22 ");
+  display.print(" Temp DHT ");
   display.setCursor(0,15);
   display.setTextColor(WHITE, BLACK);
   display.print(" act: ");
@@ -143,7 +143,7 @@ void DisplayTemperatura(int t, int t_max, int t_min){
 
 void DisplayHumedad(int h_act, int h_max, int h_min){
 	
-//Imprime en el display la temperatura actual, la maxima y la minima
+//Imprime en el display la humedad actual, la maxima y la minima
 
   String hmd_act = " "+String(h_act)+ " %";
   String hmd_max = " "+String(h_max)+ " %";
@@ -152,7 +152,7 @@ void DisplayHumedad(int h_act, int h_max, int h_min){
   display.setTextSize(1);
   display.setCursor(14,5);
   display.setTextColor(WHITE, BLACK);
-  display.print(" Humedad DHT22 ");
+  display.print("Humedad DHT");
   display.setCursor(0,15);
   display.setTextColor(WHITE, BLACK);
   display.print(" act: ");
@@ -183,9 +183,9 @@ void DisplayTemperaturaDS18B20(float t_act, float t_max, float t_min){
   String temp_min = " "+String(t_min)+ " C";
   
   display.setTextSize(1);
-  display.setCursor(4,5);
+  display.setCursor(0,5);
   display.setTextColor(WHITE, BLACK);
-  display.print(" Temperatura DS18B20 ");
+  display.print("Temperatura DS");
   display.setCursor(0,15);
   display.setTextColor(WHITE, BLACK);
   display.print(" act: ");
@@ -257,6 +257,10 @@ void loop() {
 //Realiza una lectura del DS18B20:
   sensorDS18B20.requestTemperatures();
   tempDS = sensorDS18B20.getTempCByIndex(0);
+
+  //tempDHT = 3;
+  //humdDHT = 69;
+  //tempDS = 15.15;
   
 //////////////////////////////////////////////////////////////////////
 
