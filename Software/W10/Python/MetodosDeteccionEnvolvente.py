@@ -1,7 +1,7 @@
 #from matplotlib.widgets import Cursor
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import hilbert,butter,filtfilt,find_peaks
+from scipy.signal import hilbert,butter,bessel,filtfilt,find_peaks
 from scipy.interpolate import lagrange
 from scipy import signal
 
@@ -9,6 +9,7 @@ from scipy import signal
 #import os
 #import errno
 
+#*****************************************************************************
 #Constantes:
 sizeTramaShort = 702
 sizeTramaInt = 350
@@ -19,8 +20,11 @@ factorResample = 2
 periodoResample = periodoMuestreo/factorResample
 dix = 25*factorResample
 tramaDatosInt = []
+#*****************************************************************************
 
+#*****************************************************************************
 #Funciones:
+
 def RemuestrearOffset(arrayMuestras):
     #Convierte el array a formato np:
     npMuestras = np.array(arrayMuestras)
@@ -31,15 +35,26 @@ def RemuestrearOffset(arrayMuestras):
     #print(meanMuestras)
     #Realiza el offset de la señal:
     resampleMuestras = resampleMuestras - meanMuestras
-    #Calcula el valora absoluto de la señal:
-    #abMuestras = abs(npMuestras)
     return resampleMuestras
-        
+
+def CalcularValorAbsoluto(senal):
+    #Calcula el valora absoluto de la señal:
+    abSenal = abs(senal)
+    return abSenal
+    
 def butter_lowpass_filter(data, cutoff, fs, order):
     nyq = 0.5 * fs  # Nyquist Frequency
     normal_cutoff = cutoff / nyq
     # Get the filter coefficients 
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    y = filtfilt(b, a, data)
+    return y
+
+def bessel_lowpass_filter(data, cutoff, fs, order):
+    nyq = 0.5 * fs  # Nyquist Frequency
+    normal_cutoff = cutoff / nyq
+    # Get the filter coefficients 
+    b, a = bessel(order, normal_cutoff, btype='low', analog=False)
     y = filtfilt(b, a, data)
     return y
 
@@ -55,7 +70,11 @@ def DetectarEnvolvente(senal):
     #plt.show()
     return envolepe
 
-def InterpolarSenal(senal):
+def parabola(x, a, b, c):
+    return a*x**2 + b*x + c
+
+def InterpolarSenal(senalM,senal):
+    signalM = senalM
     npSignal = np.array(senal)
     y0 = np.max(npSignal)
     x0 = list(npSignal).index(y0)
@@ -65,15 +84,16 @@ def InterpolarSenal(senal):
     y2 = npSignal[x2]
     xp = [x1,x0,x2]
     yp = [y1,y0,y2]
-    
     f = lagrange(xp,yp)
     x_new = np.arange(0, 700,2.5)
-    
-    #plt.plot(x_new,f(x_new))
-    #plt.plot(xp, yp, "x")
-    #plt.show()
+    plt.ylim(-250,250)
+    plt.plot(signalM)
+    plt.plot(npSignal)
+    plt.plot(x_new,f(x_new), 'r--')
+    plt.plot(xp, yp, "x")
+    plt.show()
     return f(x_new)
-    
+       
 def CalcularPico(data):   
     #funcion find_peaks de scipy:
     #peaks, _ = find_peaks(data, prominence=1) 
@@ -99,17 +119,20 @@ def CalcularPico(data):
     #print(y0)
     #print(y1)
     #print(y2)
-        
+#*****************************************************************************        
 
+#*****************************************************************************
 #Ingreso de datos:
 nombreArchivo = input("Ingrese el nombre del archivo: ")
 
 #Abre el archivo binario:
-rutaCarpeta = "C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
+#rutaCarpeta = "C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
+rutaCarpeta = "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
 path = rutaCarpeta + str(nombreArchivo) + ".dat"
 
 f = open(path, "rb")
 tramaDatosShort = np.fromfile(f, np.int8, sizeTramaShort)
+#*****************************************************************************
 
 #*****************************************************************************
 #Obtiene los bytes de temperatura de la trama:
@@ -148,19 +171,46 @@ for i in range(0, sizeTramaInt - 1):
 
 #plt.plot(tramaDatosInt)
 #plt.show()
+#*****************************************************************************
 
+#*****************************************************************************
 #Procesamiento de la señal:
 #banProcesar =  input("Desea extraer el evento? s/n: ")
 banProcesar = 's'
 if (banProcesar=='s'):
     print('Procesando...')
+    
     offsetSenal = RemuestrearOffset(tramaDatosInt)
+    
+    #**Metodo 1**
+    # absSenal = CalcularValorAbsoluto(offsetSenal)
+    # besselSenal = (1.65)*bessel_lowpass_filter(absSenal, 5547, 200000, 2)
+    # interSenal = InterpolarSenal(absSenal,besselSenal) 
+    
+    
+    #**Metodo 2**
     envolventeSenal = DetectarEnvolvente(offsetSenal)
-    CalcularPico(envolventeSenal)
-    interp = InterpolarSenal(envolventeSenal)
+    interSenal = InterpolarSenal(offsetSenal,envolventeSenal) 
+    
+    
+    
+    #CalcularPico(envolventeSenal)
+    #interp = InterpolarSenal(envolventeSenal)
+    
     #Graficar:
-    plt.plot(offsetSenal)
-    plt.plot(envolventeSenal)
-    #plt.plot(interp)
+    #plt.ylim(-250,250)
+    #plt.plot(offsetSenal)
+    
+    #Metodo 1:
+    #plt.plot(absSenal)
+    #plt.plot(besselSenal, 'g')
+    #plt.plot(interSenal,'r--')
+    
+    #Metodo 2:
+    #plt.plot(envolventeSenal, 'g')
+    #plt.plot(interSenal,'r--')
+    
+    
     #plt.plot(peaks, envolepe[peaks], "x")
-    plt.show()
+    #plt.show()
+#*****************************************************************************
