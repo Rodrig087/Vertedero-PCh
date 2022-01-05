@@ -5,7 +5,8 @@ from datetime import datetime
 
 # ///////////////////////////////// Archivos //////////////////////////////////
 
-pathDirectorioArchivos = 'D:\Proyecto Chanlud/Analisis/Vertederos/C01V03/Binarios/'
+#pathDirectorioArchivos = 'D:\Proyecto Chanlud/Analisis/Vertederos/C01V03/Binarios/'
+pathDirectorioArchivos = 'C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/C01V03/Binarios/'
 
 # /////////////////////////////////////////////////////////////////////////////
 
