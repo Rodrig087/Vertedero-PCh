@@ -128,7 +128,9 @@ nombreArchivo2 = input("Ingrese el nombre del segundo archivo: ")
 
 #Abre el archivo binario:
 #rutaCarpeta = "C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
-rutaCarpeta = "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
+rutaCarpeta = 'C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/C01V03/Binarios/'
+#rutaCarpeta = "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
+
 path2 = rutaCarpeta + str(nombreArchivo2) + ".dat"
 
 #*****************************************************************************
