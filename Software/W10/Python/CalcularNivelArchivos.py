@@ -5,6 +5,8 @@ import math
 import os
 from datetime import datetime
 
+import matplotlib.pyplot as plt 
+
 #Constantes:
 sizeTramaShort = 702
 sizeTramaInt = 350
@@ -85,7 +87,7 @@ def ProcesarSenal(tramaDatosShort,referencia):
     # print("Desfase [us]: %f" % desfaseTiempo) 
     # print("TOF [us]: %f" % TOF) 
     #print("Distancia [mm]: %f" % Distancia) 
-    return Distancia
+    return [Distancia,temperaturaSensor]
     #*****************************************************************************
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -112,20 +114,30 @@ if __name__ == '__main__':
     listaArchivosOrdenada = sorted(listaArchivos)    
     #print(listaArchivosOrdenada)    
     #******************************************************************************
-    
-    # #******************************************************************************
-    # #Abre el archivo binario de datos:
-    # nombreArchivo = listaArchivosOrdenada[0]
-    # pathArchivo = rutaCarpeta + nombreArchivo
-    # f = open(pathArchivo, "rb")
-    # tramaDatosShort = np.fromfile(f, np.int8, sizeTramaShort)
-    # f.close()
-    # #******************************************************************************
-    
+        
+    #******************************************************************************
+    #Lee o crea el archivo de mediciones:
+    try:
+        #Lee la ultima linea del archivo de mediciones:
+        archivoMediciones = open(rutaCarpeta[0:86]+"C01V03.txt","r")
+        file_lines = archivoMediciones.readlines ()
+        archivoMediciones.close()
+        ultimaLinea = file_lines [len (file_lines) -1]
+        ultimaFecha = ultimaLinea[0:19]
+        ultimaFecha_dt =  datetime.strptime(ultimaFecha, '%Y-%m-%d %H:%M:%S')
+        banNewFile = 0
+        print(ultimaFecha_dt)
+    except:
+        print("El archivo no existe...")
+        banNewFile = 1
     #******************************************************************************
     
-    archivoMediciones = open(rutaCarpeta[0:86]+"datosMedidos.txt","a")
-        
+    archivoMediciones = open(rutaCarpeta[0:86]+"C01V03.txt","a")
+    
+    x = []
+    y = []
+    t = []
+            
     for nombreArchivo in listaArchivosOrdenada:
         #Abre el archivo binario de datos:
         pathArchivo = rutaCarpeta + nombreArchivo
@@ -138,12 +150,33 @@ if __name__ == '__main__':
         fecha_dt = datetime.strptime(fechaHora, '%y%m%d-%H%M')
         #print(fecha_dt)
         
-        distanciaMedida = ProcesarSenal(tramaDatosShort,senalReferencia)
+        medicion = ProcesarSenal(tramaDatosShort,senalReferencia)
+        distanciaMedida = medicion[0]
+        temperaturaMedida = medicion[1]
         
-        print (str(fecha_dt) + "\t" + str(distanciaMedida))
-        archivoMediciones.write(str(fecha_dt) + "\t" + str(distanciaMedida) + "\n")
+        y.append(distanciaMedida)
+        x.append(fecha_dt)
+        t.append(temperaturaMedida)
+        
+        #print (str(fecha_dt) + "\t" + str(distanciaMedida) + "\t" + str(temperaturaMedida))
+        
+        #Guarda los datos nuevos:
+        if (banNewFile==1):
+            print("Guardado...")
+            archivoMediciones.write(str(fecha_dt) + "\t" + str(distanciaMedida) + "\t" + str(temperaturaMedida) + "\n")
+        else:
+            if (ultimaFecha_dt<fecha_dt):
+                print("Guardado...")
+                archivoMediciones.write(str(fecha_dt) + "\t" + str(distanciaMedida) + "\t" + str(temperaturaMedida) + "\n")
     
+        
     archivoMediciones.close()
+    
+    #Grafica los datos como una serie temporal:
+    #plt.plot_date(x,y,linestyle ='solid')
+    plt.plot_date(x,t,linestyle ='solid', color='r')
+    plt.gcf().set_size_inches(9, 7)
+    plt.show()
     
 # /////////////////////////////////////////////////////////////////////////////
 
