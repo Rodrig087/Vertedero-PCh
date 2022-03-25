@@ -61,6 +61,7 @@ def ProcesarSenal(tramaDatosShort,referencia):
     dTemp = -0.5
     temperaturaSensor = temperaturaInt + temperaturaFloat + dTemp
     Vsonido = 331.45 * math.sqrt(1 + (temperaturaSensor / 273))
+    MLO = (1000*(Vsonido/40000)/2)
     #*****************************************************************************
     
     #*****************************************************************************
@@ -87,7 +88,7 @@ def ProcesarSenal(tramaDatosShort,referencia):
     # print("Desfase [us]: %f" % desfaseTiempo) 
     # print("TOF [us]: %f" % TOF) 
     #print("Distancia [mm]: %f" % Distancia) 
-    return [Distancia,temperaturaSensor]
+    return [Distancia,temperaturaSensor,MLO]
     #*****************************************************************************
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -153,7 +154,8 @@ if __name__ == '__main__':
         medicion = ProcesarSenal(tramaDatosShort,senalReferencia)
         distanciaMedida = medicion[0]
         temperaturaMedida = medicion[1]
-        
+        mediaLongitudOnda = medicion[2]
+                
         y.append(distanciaMedida)
         x.append(fecha_dt)
         t.append(temperaturaMedida)
@@ -163,18 +165,18 @@ if __name__ == '__main__':
         #Guarda los datos nuevos:
         if (banNewFile==1):
             print("Guardado...")
-            archivoMediciones.write(str(fecha_dt) + "\t" + str(distanciaMedida) + "\t" + str(temperaturaMedida) + "\n")
+            archivoMediciones.write(str(fecha_dt) + "\t" + str(distanciaMedida) + "\t" + str(temperaturaMedida) + "\t" + str(mediaLongitudOnda) + "\n")
         else:
             if (ultimaFecha_dt<fecha_dt):
                 print("Guardado...")
-                archivoMediciones.write(str(fecha_dt) + "\t" + str(distanciaMedida) + "\t" + str(temperaturaMedida) + "\n")
+                archivoMediciones.write(str(fecha_dt) + "\t" + str(distanciaMedida) + "\t" + str(temperaturaMedida) + "\t" + str(mediaLongitudOnda) + "\n")
     
         
     archivoMediciones.close()
     
     #Grafica los datos como una serie temporal:
-    #plt.plot_date(x,y,linestyle ='solid')
-    plt.plot_date(x,t,linestyle ='solid', color='r')
+    plt.plot_date(x,y,linestyle ='solid')
+    #plt.plot_date(x,t,linestyle ='solid', color='r')
     plt.gcf().set_size_inches(9, 7)
     plt.show()
     

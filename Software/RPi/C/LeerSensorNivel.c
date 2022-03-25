@@ -1,6 +1,6 @@
 //Compilar:
-//gcc InspeccionarUltrasonido.c -o inspeccionarultrasonido -lbcm2835 -lwiringPi 
-//gcc InspeccionarUltrasonido.c -o /home/rsa/Ejecutables/inspeccionarultrasonido -lbcm2835 -lwiringPi 
+//gcc LeerSensorNivel.c -o leersensornivel -lbcm2835 -lwiringPi 
+//gcc LeerSensorNivel.c -o /home/rsa/Ejecutables/leersensornivel -lbcm2835 -lwiringPi 
 
 /*-------------------------------------------------------------------------------------------------------------------------
 Autor: Milton Munoz
@@ -70,29 +70,31 @@ void ImprimirInformacion();
 void Salir();						
 
 
-int main() {
+int main(int argc, char *argv[]){
 
 	//printf("Iniciando...\n");
+	idPet = (char)(atoi(argv[1]));
   
 	//Inicializa las variables:
 	i = 0;
 	x = 0;
-	
-	idPet = 0;
-	funcionPet = 0;
-	subFuncionPet = 0;
-	numDatosPet = 0;
 	idResp = 0;
 	funcionPet = 0;
 	subFuncionResp = 0;
 	numDatosResp = 0;
 	ptrNumDatosResp = (unsigned char *) & numDatosResp;
-		
+	
 	//Configuracion principal:
 	ConfiguracionPrincipal();
 	
+	//idPet = 0;
+	//funcionPet = 0;
+	//subFuncionPet = 0;
+	//numDatosPet = 0;
+		
+	
 	//Datos de prueba:
-	idPet = 3;
+	//idPet = 3;
 	funcionPet = 2;
 	subFuncionPet = 2;
 	numDatosPet = 0;

@@ -1,4 +1,4 @@
-#line 1 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 1 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
 #line 1 "c:/users/milto/milton/rsa/git/proyecto chanlud/vertedero pch/vertedero-pch/firmware/librerias/rs485.c"
 #line 13 "c:/users/milto/milton/rsa/git/proyecto chanlud/vertedero pch/vertedero-pch/firmware/librerias/rs485.c"
 extern sfr sbit MSRS485;
@@ -51,33 +51,7 @@ void EnviarTramaRS485(unsigned char puertoUART, unsigned char *cabecera, unsigne
  }
 
 }
-#line 36 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
-const float h[]=
-{
-0,
-8.655082858474001e-04,
-0.003740336116716,
-0.008801023059201,
-0.015858487391720,
-0.024356432913204,
-0.033436118860918,
-0.042058476113843,
-0.049163467317092,
-0.053839086446614,
-0.055470000000000,
-0.053839086446614,
-0.049163467317092,
-0.042058476113843,
-0.033436118860918,
-0.024356432913204,
-0.015858487391720,
-0.008801023059201,
-0.003740336116716,
-8.655082858474001e-04,
-0
-};
-
-
+#line 35 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
 sbit MSRS485 at LATB5_bit;
 sbit MSRS485_Direction at TRISB5_bit;
 sbit LED1 at LATA4_bit;
@@ -97,7 +71,7 @@ unsigned char respuestaPyloadRS485[15];
 unsigned char direccionRS485, funcionRS485, subFuncionRS485;
 unsigned int numDatosRS485;
 unsigned char *ptrNumDatosRS485;
-unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  1 };
+unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  3 };
 
 unsigned char ir, ip, ipp;
 
@@ -162,7 +136,7 @@ unsigned int LeerDS18B20();
 void ProbarMuestreo();
 void CapturarMuestras();
 void ProcesarMuestras();
-float CalcularTOF();
+
 void EnviarTramaInt(unsigned char* cabecera, unsigned int temperatura);
 void ProbarEnvioTrama();
 
@@ -201,7 +175,7 @@ void main() {
  banderaPeticion = 0;
 
 
- LED1 = 0;
+ LED1 = 1;
  LED2 = 0;
 
  ip=0;
@@ -213,6 +187,11 @@ void main() {
  ProcesarSolicitud(solicitudCabeceraRS485, solicitudPyloadRS485);
 
  }
+
+ CapturarMuestras();
+ Delay_ms(500);
+
+
  }
 
 
@@ -237,6 +216,7 @@ void ConfiguracionPrincipal(){
  TRISB = 0xFF40;
  MSRS485_Direction = 0;
  LED1_Direction = 0;
+ LED2_Direction = 0;
 
  AD1CON1.AD12B = 0;
  AD1CON1bits.FORM = 0x00;
@@ -317,7 +297,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  case 1:
 
  temperaturaRaw = LeerDS18B20();
- TOF = CalcularTOF();
+
  break;
  case 2:
 
@@ -338,7 +318,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  default:
 
  temperaturaRaw = LeerDS18B20();
- TOF = CalcularTOF();
+
  break;
  }
  break;
@@ -375,7 +355,6 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  break;
  case 4:
 
-
  switch (subFuncionSolicitud){
  case 2:
 
@@ -384,7 +363,6 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  cabeceraSolicitud[3] = *(ptrNumDatosResp);
  cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
  EnviarTramaRS485(1, cabeceraSolicitud, tramaPruebaRS485);
- LED1 = ~LED1;
  break;
  case 3:
 
@@ -460,7 +438,7 @@ void ProbarEnvioTrama(){
 
  i = 0;
  while (i<numeroMuestras){
- vectorMuestras[j] = 255;
+ vectorMuestras[j] = 500;
  i++;
  }
 
@@ -508,118 +486,7 @@ void CapturarMuestras(){
  LED1 = 0;
 
 }
-
-
-
-
-void ProcesarMuestras(){
-
- LED1 = 1;
-
-
- bm = 0;
- contPulsos = 0;
- RB2_bit = 0;
- T1CON.TON = 0;
- TMR2 = 0;
- T2CON.TON = 1;
- i = 0;
- while(bm!=1);
-
-
- if (bm==1){
-
-
- Mmed = 508;
-
- for (k=0;k<numeroMuestras;k++){
-
-
- valorAbsoluto = vectorMuestras[k]-Mmed;
- if (vectorMuestras[k]<Mmed){
- valorAbsoluto = (vectorMuestras[k]+((Mmed-vectorMuestras[k])*2))-(Mmed);
- }
-
-
-
- for( f=O-1; f!=0; f-- ) XFIR[f]=XFIR[f-1];
-
- XFIR[0] = (float)(valorAbsoluto);
-
- y0 = 0.0; for( f=0; f<O; f++ ) y0 += h[f]*XFIR[f];
-
- YY = (unsigned int)(y0);
- vectorMuestras[k] = YY;
-
- }
-
- bm = 2;
-
- }
-
-
- if (bm==2){
-
- yy1 = Vector_Max(vectorMuestras, numeroMuestras, &maxIndex);
- i1b = maxIndex;
- i1a = 0;
-
- while (vectorMuestras[i1a]<yy1){
- i1a++;
- }
-
- i1 = i1a+((i1b-i1a)/2);
- i0 = i1 - dix;
- i2 = i1 + dix;
-
- yy0 = vectorMuestras[i0];
- yy2 = vectorMuestras[i2];
-
- yf0 = (float)(yy0);
- yf1 = (float)(yy1);
- yf2 = (float)(yy2);
-
- nx = (yf0-yf2)/(2.0*(yf0-(2.0*yf1)+yf2));
- dx = nx*dix*tx;
- tmax = i1*tx;
-
- T2 = tmax+dx;
-
- }
-
- LED1 = 0;
-
-}
-
-
-
-float CalcularTOF(){
-
- conts = 0;
- T2sum = 0.0;
- T2prom = 0.0;
- T2a = 0.0;
- T2b = 0.0;
-
- while (conts<Nsm){
- ProcesarMuestras();
- T2b = T2;
- if ((T2b-T2a)<=T2umb){
- T2sum = T2sum + T2b;
- conts++;
- }
- T2a = T2b;
- }
-
- T2prom = T2sum/Nsm;
-
- return T2prom;
-
-}
-
-
-
-
+#line 584 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
 void EnviarTramaInt(unsigned char* cabecera, unsigned int temperatura){
 
 
@@ -658,7 +525,6 @@ void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
  while (!AD1CON1bits.DONE);
  if (i<numeroMuestras){
  vectorMuestras[i] = ADC1BUF0;
-
  i++;
  } else {
  bm = 1;
@@ -718,7 +584,7 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
  }
  if ((banRSI==1)&&(i_rs485==5)){
 
- if ((solicitudCabeceraRS485[0]== 1 )||(solicitudCabeceraRS485[0]==255)){
+ if ((solicitudCabeceraRS485[0]== 3 )||(solicitudCabeceraRS485[0]==255)){
 
  *(ptrNumDatosRS485) = solicitudCabeceraRS485[3];
  *(ptrNumDatosRS485+1) = solicitudCabeceraRS485[4];
@@ -736,7 +602,7 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
  Delay_ms(100);
 
 
- LED2 = ~LED2;
+
  banderaPeticion = 1;
 
  banRSC = 0;

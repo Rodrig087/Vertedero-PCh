@@ -27629,12 +27629,12 @@ http://catalog.tycoelectronics.com&lt;br&gt;
 <wire x1="-6" y1="-4.8" x2="0" y2="-4.8" width="0.15" layer="21"/>
 <wire x1="0" y1="-4.8" x2="6" y2="-4.8" width="0.15" layer="21"/>
 <wire x1="0" y1="-4.8" x2="0" y2="-7.3" width="0.15" layer="21"/>
-<pad name="1" x="-2.5" y="-7.3" drill="0.9"/>
-<pad name="3" x="-0.5" y="-7.3" drill="0.9"/>
-<pad name="5" x="1.5" y="-7.3" drill="0.9"/>
-<pad name="6" x="2.5" y="-4.8" drill="0.9"/>
-<pad name="4" x="0.5" y="-4.8" drill="0.9"/>
-<pad name="2" x="-1.5" y="-4.8" drill="0.9"/>
+<pad name="1" x="-2.5" y="-7.3" drill="0.75" shape="octagon"/>
+<pad name="3" x="-0.5" y="-7.3" drill="0.75" shape="octagon"/>
+<pad name="5" x="1.5" y="-7.3" drill="0.75" shape="octagon"/>
+<pad name="6" x="2.5" y="-4.8" drill="0.75" shape="octagon"/>
+<pad name="4" x="0.5" y="-4.8" drill="0.75" shape="octagon"/>
+<pad name="2" x="-1.5" y="-4.8" drill="0.75" shape="octagon"/>
 <hole x="6" y="-3" drill="2"/>
 <circle x="-6" y="-3" radius="1" width="0.15" layer="45"/>
 <circle x="6" y="-3" radius="1" width="0.15" layer="45"/>

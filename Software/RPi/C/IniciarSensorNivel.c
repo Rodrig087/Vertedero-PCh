@@ -1,6 +1,6 @@
 //Compilar:
-//gcc IniciarMedicion.c -o iniciarmedicion -lbcm2835 -lwiringPi 
-//gcc IniciarMedicion.c -o /home/rsa/Ejecutables/iniciarmedicion -lbcm2835 -lwiringPi
+//gcc IniciarSensorNivel.c -o iniciarsensornivel-lbcm2835 -lwiringPi 
+//gcc IniciarSensorNivel.c -o /home/rsa/Ejecutables/iniciarsensornivel -lbcm2835 -lwiringPi
 
 /*-------------------------------------------------------------------------------------------------------------------------
 Autor: Milton Munoz
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
 //int main(){
 
 	//printf("Iniciando...\n");
-	subFuncionPet = (char)(atoi(argv[1]));
+	idPet = (char)(atoi(argv[1]));
   
 	//Inicializa las variables:
 	i = 0;
@@ -74,9 +74,9 @@ int main(int argc, char *argv[]){
 	ConfiguracionPrincipal();
 	
 	//Datos de prueba:
-	idPet = 3;
+	//idPet = 3;
 	funcionPet = 1;
-	//subFuncionPet = 1;
+	subFuncionPet = 2;
 	numDatosPet = 0;
 		
 	//Variables para convertir la temperatura:

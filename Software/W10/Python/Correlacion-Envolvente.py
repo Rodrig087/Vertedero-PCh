@@ -161,8 +161,7 @@ temperaturaInt = (temperaturaRaw >> 4) * signoTemp
 temperaturaFloat = ((temperaturaRaw & 0x000F) * 625) / 10000.0
 #Calcula la temperatura:
 dTemp = -0.5
-#temperaturaSensor = temperaturaInt + temperaturaFloat + dTemp
-temperaturaSensor = 20.9
+temperaturaSensor = temperaturaInt + temperaturaFloat + dTemp
 Vsonido = 331.45 * math.sqrt(1 + (temperaturaSensor / 273))
 #*****************************************************************************
 
@@ -208,7 +207,7 @@ if (banProcesar=='s'):
     print("Distancia [mm]: %f" % Distancia) 
     
     #Graficar:
-    #plt.ylim(-250,250)
+    plt.ylim(-250,250)
     plt.plot(senal1, 'r--')
     plt.plot(senal2)
     #plt.phase_spectrum(senal1)

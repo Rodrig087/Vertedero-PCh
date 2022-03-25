@@ -86,7 +86,7 @@ def InterpolarSenal(senalM,senal):
     yp = [y1,y0,y2]
     f = lagrange(xp,yp)
     x_new = np.arange(0, 700,2.5)
-    #plt.ylim(-250,250)
+    plt.ylim(-250,250)
     plt.plot(signalM)
     plt.plot(npSignal)
     plt.plot(x_new,f(x_new), 'r--')
@@ -164,7 +164,15 @@ temperaturaSensor = temperaturaInt + temperaturaFloat
 #print("   Temperatura LSB: " + hex(temperaturaLSB))
 #print("   Temperatura MSB: " + hex(temperaturaMSB))
 #print("   Temperatura Raw: " + str(temperaturaRaw))
+print()
+print("****************************************************")
+print("Temperatura")
+print("   Byte LSB: " + str(hex(temperaturaLSB&0xFF)))
+print("   Byte MSB: " + str(hex(temperaturaMSB&0xFF)))
+print("   Temperatura Raw: " + str(hex(temperaturaRaw)))
 print("   Temperatura sensor: " + str(temperaturaSensor))
+print("****************************************************")
+print()
 #*****************************************************************************
 
 #*****************************************************************************
@@ -175,21 +183,26 @@ for i in range(0, sizeTramaInt - 1):
     datoInt = ((datoIntMSB << 8) & 0xFF00) + ((datoIntLSB) & 0xFF)
     tramaDatosInt.append(datoInt)
 
-# datoPrueba = tramaDatosInt[184]
-# print("   DatoInt: " + hex(datoPrueba))
 
-#plt.plot(tramaDatosInt)
-#plt.show()
+
+print("****************************************************")
+datoPrueba = tramaDatosInt[300]
+print("   DatoInt: " + str(datoPrueba))
+print(tramaDatosInt)
+print("****************************************************")
+
+plt.plot(tramaDatosInt)
+plt.show()
 #*****************************************************************************
 
 #*****************************************************************************
 #Procesamiento de la señal:
 #banProcesar =  input("Desea extraer el evento? s/n: ")
-banProcesar = 's'
-if (banProcesar=='s'):
-    print('Procesando...')
+#banProcesar = 's'
+#if (banProcesar=='s'):
+#    print('Procesando...')
     
-    offsetSenal = RemuestrearOffset(tramaDatosInt)
+#    offsetSenal = RemuestrearOffset(tramaDatosInt)
     
     #**Metodo 1**
     # absSenal = CalcularValorAbsoluto(offsetSenal)
@@ -198,8 +211,8 @@ if (banProcesar=='s'):
     
     
     #**Metodo 2**
-    envolventeSenal = DetectarEnvolvente(offsetSenal)
-    interSenal = InterpolarSenal(offsetSenal,envolventeSenal) 
+#    envolventeSenal = DetectarEnvolvente(offsetSenal)
+#    interSenal = InterpolarSenal(offsetSenal,envolventeSenal) 
     
     
     

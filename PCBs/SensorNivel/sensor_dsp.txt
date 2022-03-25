@@ -1,0 +1,79 @@
+Partlist exported from C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/PCBs/SensorNivel/sensor_dsp.sch at 3/3/2022 18:02
+
+Part Value               Device              Package          Description                                                   MF       MPN        OC_FARNELL OC_NEWARK POPULARITY SPICEPREFIX
+C1   22pF                C-EU025-024X044     C025-024X044     CAPACITOR, European symbol                                                                             56         C          
+C2   22pF                C-EU025-024X044     C025-024X044     CAPACITOR, European symbol                                                                             56         C          
+C3   10nF                C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C4   10nF                C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C5   10nF                C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C6   1nF                 C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C7   1nF                 C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C8   1nF                 C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C9   10uF                C-EU050-024X044     C050-024X044     CAPACITOR, European symbol                                                                             33         C          
+C10  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C11  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C12  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C14  1uF                 CPOL-EUE2.5-5       E2,5-5           POLARIZED CAPACITOR, European symbol                                                                   16         C          
+C15  10uF                CPOL-EUE2.5-5       E2,5-5           POLARIZED CAPACITOR, European symbol                                                                   16         C          
+C16  1uF                 CPOL-EUE2.5-5       E2,5-5           POLARIZED CAPACITOR, European symbol                                                                   16         C          
+C17  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C18  470uF               CPOL-EUE3.5-8       E3,5-8           POLARIZED CAPACITOR, European symbol                                                                   13         C          
+C19  10uF                CPOL-EUE2.5-5       E2,5-5           POLARIZED CAPACITOR, European symbol                                                                   16         C          
+C20  10nF                C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C21  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C22  10nF                C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C23  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C24  10nF                C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C25  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C26  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C27  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C28  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C29  100nF               C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+C30  10nF                C5/2.5              C5B2.5           CAPACITOR                                                                                              10                    
+D1   1N4148DO35-7        1N4148DO35-7        DO35-7           DIODE                                                                                                  58                    
+IC1  LD117AS             LD117AS12TR         SOT223           Low drop fixed and adjustable positive voltage regulators 1 A                                          0                     
+IC2  DSPIC33FJ12GP202/SP DSPIC33FJ12GP202/SP DIL28-3          dsPIC33 General DSC                                                                                                          
+IC3                      79                  TO220V           Negative VOLTAGE REGULATOR                                                                                                   
+IC4  7805TV              7805TV              TO220V           Positive VOLTAGE REGULATOR                                                                                                   
+IC5  ICL7660CPA          ICL7660CPA          DIL08            VOLTAGE CONVERTER                                             INTERSIL ICL7660CPA 1018170    06F7441                         
+IC6  4069N               4069N               DIL14            Hex INVERTER                                                                                                                 
+IC7  LM324N              LM324N              DIL14            OP AMP                                                                                                                       
+IC8  LM324N              LM324N              DIL14            OP AMP                                                                                                                       
+IC9  MAX481CPA           MAX481CPA           DIL08            RS485 TRANSEIVER                                                       MAX481CPA+ unknown    99K3445                         
+L1                       LED3MM              LED3MM           LED                                                                                                                          
+L2                       LED3MM              LED3MM           LED                                                                                                                          
+Q6   8MHz                CRYSTALSM49         SM49             CRYSTAL                                                                           unknown    unknown   3                     
+R1                       R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R2   120                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R9                       R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R12  4.7K                R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R13  4.7K                R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R14  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                                                    
+R15  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R16  1M                  R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R17  1K                  R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R18  3.3K                R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                                                    
+R19  470                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R20  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R21  390                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R22  220                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R23  220                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R24                      TRIM_EU-B64W        B64W             POTENTIOMETER                                                                                                                
+R25  1K                  R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R26  3.3K                R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R27  3.3K                R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R28  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R29  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R30  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                                                    
+R31  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R32  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R33  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R34  10K                 R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R35  2.2K                R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+R36  2.2K                R-EU_0204/7         0204/7           RESISTOR, European symbol                                                                              79         R          
+RX1                      PINHD-1X1           1X01             PIN HEADER                                                                                                                   
+RX2                      PINHD-1X1           1X01             PIN HEADER                                                                                                                   
+SV2                      MA06-1              MA06-1           PIN HEADER                                                                        unknown    unknown                         
+TMP                      MA03-1              MA03-1           PIN HEADER                                                                        unknown    unknown                         
+U$1  RJ11-2L-MM          RJ11-2L-MM          RJ11-NO_SHIELD_2                                                                                                                              
+X1                       AK300/4             AK300/4          CONNECTOR                                                                         unknown    unknown   0                     

@@ -1,13 +1,12 @@
 /*-------------------------------------------------------------------------------------------------------------------------
 Autor: Milton Munoz
-Fecha de creacion: 21/09/09
+Fecha de creacion: 22/03/018
 Configuracion: dsPIC P33FJ32MC202, XT=8MHz, PLL=80MHz
 Observaciones:
-1. Rediseno del firmware del sensor de nivel elaborado para el proyecto de tesis elaborado el 17/01/13
-2. En esta version el calculo del caudal se hace en la Raspberry Pi.
-3. En la version del 21-10-06 se establecio que el sensor envie los datos de T2 y temperatura_raw.
-   Tambien permite enviar el vector de muestras y el vector de deteccion de envolvente.
-   Ya no hace falta recibir o enviar datos de escritura de las constantes T2adj, Kadj y altura de instalacion
+1. Firmware para probar el funcionamiento del sensor:
+   - Generacion de pulsos
+   - Recepcion de señal ultrasonica
+   - Comunicacion RS485
 
 
 Descripcion:
@@ -30,33 +29,7 @@ Funcion4: Test comunicacion:
 
 ////////////////////////////////////////////// Declaracion de variables y costantes ///////////////////////////////////////////////////////
 //Credenciales:
-#define IDNODO 1                                                                //Idendtificador del nodo
-
-//Funcion de transferencia h(n) filtro FIR (Fs=200KHz, Fc=5547Hz) Ventana Hamming
-const float h[]=
-{
-0,                        //h(0)
-8.655082858474001e-04,    //h(1)
-0.003740336116716,        //h(2)
-0.008801023059201,        //h(3)
-0.015858487391720,        //h(4)
-0.024356432913204,        //h(5)
-0.033436118860918,        //h(6)
-0.042058476113843,        //h(7)
-0.049163467317092,        //h(8)
-0.053839086446614,        //h(9)
-0.055470000000000,        //h(10)
-0.053839086446614,        //h(11)
-0.049163467317092,        //h(12)
-0.042058476113843,        //h(13)
-0.033436118860918,        //h(14)
-0.024356432913204,        //h(15)
-0.015858487391720,        //h(16)
-0.008801023059201,        //h(17)
-0.003740336116716,        //h(18)
-8.655082858474001e-04,    //h(19)
-0                         //h(20)
-};
+#define IDNODO 3                                                                //Idendtificador del nodo
 
 //Declaracion de pines:
 sbit MSRS485 at LATB5_bit;                                                     //Definicion del pin MS RS485
@@ -143,7 +116,7 @@ unsigned int LeerDS18B20();
 void ProbarMuestreo();
 void CapturarMuestras();
 void ProcesarMuestras();
-float CalcularTOF();
+//float CalcularTOF();
 void EnviarTramaInt(unsigned char* cabecera, unsigned int temperatura);
 void ProbarEnvioTrama();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +155,7 @@ void main() {
      banderaPeticion = 0;
 
      //Puertos:
-     LED1 = 0;
+     LED1 = 1;
      LED2 = 0;
 
      ip=0;
@@ -194,6 +167,11 @@ void main() {
              ProcesarSolicitud(solicitudCabeceraRS485, solicitudPyloadRS485);
           
           }
+          
+          CapturarMuestras();
+          Delay_ms(500);
+
+          
      }
      //Fin prueba
 
@@ -218,6 +196,7 @@ void ConfiguracionPrincipal(){
      TRISB = 0xFF40;                                                            //TRISB = 11111111 01000000
      MSRS485_Direction = 0;                                                     //MSRS485 out
      LED1_Direction = 0;                                                        //LED1 out
+     LED2_Direction = 0;                                                        //LED2 out
      //Configuracion del ADC:
      AD1CON1.AD12B = 0;                                                         //Configura el ADC en modo de 10 bits
      AD1CON1bits.FORM = 0x00;                                                   //Formato de la canversion: 00->(0_1023)|01->(-512_511)|02->(0_0.999)|03->(-1_0.999)
@@ -298,7 +277,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                     case 1:
                          //Realiza una medicion de temperatura y TOF:
                          temperaturaRaw = LeerDS18B20();
-                         TOF = CalcularTOF();
+                         //TOF = CalcularTOF();
                          break;
                     case 2:
                          //Realiza una medicion de temperatura y captura la senal ultrasonica
@@ -319,7 +298,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                     default:
                          //Realiza una medicion de temperatura y TOF:
                          temperaturaRaw = LeerDS18B20();
-                         TOF = CalcularTOF();
+                         //TOF = CalcularTOF();
                          break;
                }
                break;
@@ -356,7 +335,6 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                break;
           case 4:
                //Test de comunicacion RS485:
-
                switch (subFuncionSolicitud){
                     case 2:
                          //Test trama corta:
@@ -365,7 +343,6 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          cabeceraSolicitud[3] = *(ptrNumDatosResp);
                          cabeceraSolicitud[4] = *(ptrNumDatosResp+1);
                          EnviarTramaRS485(1, cabeceraSolicitud, tramaPruebaRS485);
-                         LED1 = ~LED1;
                          break;
                     case 3:
                          //Test trama larga:
@@ -441,7 +418,7 @@ void ProbarEnvioTrama(){
      
      i = 0;
      while (i<numeroMuestras){
-        vectorMuestras[j] = 255;                                           //Almacena el valor actual de la conversion del ADC en el vectorMuestras
+        vectorMuestras[j] = 500;                                           //Almacena el valor actual de la conversion del ADC en el vectorMuestras
         i++;                                                                    //Aumenta en 1 el subindice del vector de Muestras
      }
      
@@ -490,7 +467,7 @@ void CapturarMuestras(){
 
 }
 
-
+/*
 //*****************************************************************************************************************************************
 //Funcion capturar y procesar la senal ultrasonica
 void ProcesarMuestras(){
@@ -571,7 +548,8 @@ void ProcesarMuestras(){
       LED1 = 0;
 
 }
-
+*/
+/*
 //*****************************************************************************************************************************************
 //Funcion para el calculo del T2
 float CalcularTOF(){
@@ -597,6 +575,8 @@ float CalcularTOF(){
      return T2prom;
 
 }
+//*****************************************************************************************************************************************
+*/
 
 //*****************************************************************************************************************************************
 //Funcion para enviar la trama de datos tipo int:
@@ -639,7 +619,6 @@ void Timer1Interrupt() iv IVT_ADDR_T1INTERRUPT{
      while (!AD1CON1bits.DONE);                                                 //Espera hasta que se complete la conversion
      if (i<numeroMuestras){
         vectorMuestras[i] = ADC1BUF0;                                           //Almacena el valor actual de la conversion del ADC en el vectorMuestras
-        //vectorMuestras[i] = 43981;                                            //Valor de prueba para comprobar el envio de la trama
         i++;                                                                    //Aumenta en 1 el subindice del vector de Muestras
      } else {
         bm = 1;                                                                 //Cambia el valor de la bandera bm para terminar con el muestreo y dar comienzo al procesamiento de la senal
@@ -717,8 +696,8 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
           Delay_ms(100);                                                        //**Ojo: Este retardo es importante para que el Concentrador tenga tiempo de recibir la respuesta
           //Llama a la funcion para procesar la solicitud recibida:
           //ProcesarSolicitud(solicitudCabeceraRS485, solicitudPyloadRS485);
-          LED2 = ~LED2;
-          banderaPeticion = 1;
+          
+           banderaPeticion = 1;
           //Limpia la bandera de trama completa:
           banRSC = 0;
      }

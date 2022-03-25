@@ -9,12 +9,28 @@
 #include <string.h>
 #include <unistd.h>
 
+unsigned short idVertedero;
 
-int main(void) {
+int main(int argc, char *argv[]){
 	
-	system("sudo /home/rsa/Ejecutables/iniciarmedicion 2");
-	delay (1000);
-	system("sudo /home/rsa/Ejecutables/inspeccionarultrasonido");
-	delay (1000);
+	idVertedero = (char)(atoi(argv[1]));
+	
+	switch (idVertedero){
+		  case 1:
+					system("sudo /home/rsa/Ejecutables/iniciarsensornivel 1");
+					delay (1000);
+					system("sudo /home/rsa/Ejecutables/leersensornivel 1");
+					delay (1000);
+					break;					
+		  case 3:
+					printf("hola");
+					system("sudo /home/rsa/Ejecutables/iniciarsensornivel 3");
+					delay (1000);
+					system("sudo /home/rsa/Ejecutables/leersensornivel 3");
+					delay (1000);
+					break;
+	}
+					
+	
 		
 }

@@ -1107,7 +1107,6 @@ bytetostr
 c
 c
 c_bit
-calculartof
 capturarmuestras
 ceid
 ceid
@@ -1959,7 +1958,6 @@ gcstat_bit
 generartramaprueba
 get_fosc_khz
 get_fosc_per_cyc
-h
 i
 i_rs485
 i0
@@ -3846,7 +3844,6 @@ pr3_9
 pr3_9_bit
 probarenviotrama
 probarmuestreo
-procesarmuestras
 procesarsolicitud
 psv
 psv
