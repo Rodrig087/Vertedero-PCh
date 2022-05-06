@@ -135,8 +135,10 @@ nombreArchivo = input("Ingrese el nombre del archivo: ")
 
 #Abre el archivo binario:
 #rutaCarpeta = "C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
-rutaCarpeta = 'C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/C01V03/Binarios/'
+#rutaCarpeta = 'C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/C01V03/Binarios/'
 #rutaCarpeta = "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/"
+rutaCarpeta = 'C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Analisis/Vertederos/Datos/TestMediciones/'
+#rutaCarpeta = 'C:/Users/milto/Milton/RSA/Proyectos/Proyecto Chanlud/Mediciones/Vertederos/Muestreo/V06/'
 path = rutaCarpeta + str(nombreArchivo) + ".dat"
 
 f = open(path, "rb")
@@ -191,6 +193,7 @@ print("   DatoInt: " + str(datoPrueba))
 print(tramaDatosInt)
 print("****************************************************")
 
+plt.ylim(200,800)
 plt.plot(tramaDatosInt)
 plt.show()
 #*****************************************************************************

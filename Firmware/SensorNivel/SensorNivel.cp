@@ -51,7 +51,7 @@ void EnviarTramaRS485(unsigned char puertoUART, unsigned char *cabecera, unsigne
  }
 
 }
-#line 36 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 37 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
 const float h[]=
 {
 0,
@@ -97,7 +97,9 @@ unsigned char respuestaPyloadRS485[15];
 unsigned char direccionRS485, funcionRS485, subFuncionRS485;
 unsigned int numDatosRS485;
 unsigned char *ptrNumDatosRS485;
-unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  1 };
+unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  2 };
+unsigned short contTMR3;
+
 
 unsigned char ir, ip, ipp;
 
@@ -146,10 +148,11 @@ float T2adj;
 float T2sum,T2prom;
 float T2, TOF;
 unsigned int temperaturaRaw;
+unsigned char pulsosDistancia;
 
 
 unsigned char banderaPeticion;
-
+unsigned char banderaUART;
 
 
 
@@ -186,6 +189,8 @@ void main() {
  bm = 0;
  TOF = 0;
  temperaturaRaw = 0;
+ pulsosDistancia = 110;
+
 
  banRSI = 0;
  banRSC = 0;
@@ -196,13 +201,15 @@ void main() {
  numDatosRS485 = 0;
  ptrNumDatosRS485 = (unsigned char *) & numDatosRS485;
  MSRS485 = 0;
+ contTMR3 = 0;
 
 
  banderaPeticion = 0;
+ banderaUART = 0;
 
 
  LED1 = 0;
- LED2 = 0;
+ LED2 = 1;
 
  ip=0;
 
@@ -273,8 +280,7 @@ void ConfiguracionPrincipal(){
  T2IF_bit = 0;
  PR2 = 500;
  T2CON.TON = 0;
-
-
+#line 276 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
  RPINR18bits.U1RXR = 0x06;
  RPOR3bits.RP7R = 0x03;
  IEC0.U1RXIE = 1;
@@ -284,6 +290,7 @@ void ConfiguracionPrincipal(){
 
  IPC0bits.T1IP = 0x07;
  IPC1bits.T2IP = 0x06;
+
  IPC2bits.U1RXIP = 0x05;
 
  Delay_ms(100);
@@ -373,8 +380,19 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  break;
  }
  break;
- case 4:
+ case 3:
 
+ switch (subFuncionSolicitud){
+ case 1:
+
+ pulsosDistancia = payloadSolicitud[0];
+ LED1 = ~LED1;
+ Delay_ms(250);
+ LED1 = ~LED1;
+ break;
+ }
+ break;
+ case 4:
 
  switch (subFuncionSolicitud){
  case 2:
@@ -674,7 +692,8 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
  RB2_bit = ~RB2_bit;
  }else {
  RB2_bit = 0;
- if (contPulsos==110){
+
+ if (contPulsos==pulsosDistancia){
  T2CON.TON = 0;
  TMR1 = 0;
  T1CON.TON = 1;
@@ -686,12 +705,14 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
  T2IF_bit = 0;
 
 }
-
-
+#line 726 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
 void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
 
  U1RXIF_bit = 0;
+
+
  byteRS485 = UART1_Read();
+
 
 
  if (banRSI==2){
@@ -713,12 +734,13 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
  }
  }
  if ((banRSI==1)&&(byteRS485!=0x3A)&&(i_rs485<5)){
+
  solicitudCabeceraRS485[i_rs485] = byteRS485;
  i_rs485++;
  }
  if ((banRSI==1)&&(i_rs485==5)){
 
- if ((solicitudCabeceraRS485[0]== 1 )||(solicitudCabeceraRS485[0]==255)){
+ if ((solicitudCabeceraRS485[0]== 2 )||(solicitudCabeceraRS485[0]==255)){
 
  *(ptrNumDatosRS485) = solicitudCabeceraRS485[3];
  *(ptrNumDatosRS485+1) = solicitudCabeceraRS485[4];
@@ -728,6 +750,11 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
  banRSI = 0;
  banRSC = 0;
  i_rs485 = 0;
+
+
+
+
+
  }
  }
 
@@ -736,7 +763,7 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
  Delay_ms(100);
 
 
- LED2 = ~LED2;
+
  banderaPeticion = 1;
 
  banRSC = 0;

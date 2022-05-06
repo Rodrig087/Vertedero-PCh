@@ -160,9 +160,10 @@ temperaturaInt = (temperaturaRaw >> 4) * signoTemp
 #Calcula la parte decimal de la temperatura:
 temperaturaFloat = ((temperaturaRaw & 0x000F) * 625) / 10000.0
 #Calcula la temperatura:
-dTemp = -0.5
-#temperaturaSensor = temperaturaInt + temperaturaFloat + dTemp
-temperaturaSensor = 20.9
+#dTemp = -0.5
+dTemp = 0
+temperaturaSensor = temperaturaInt + temperaturaFloat + dTemp
+#temperaturaSensor = 20.9
 Vsonido = 331.45 * math.sqrt(1 + (temperaturaSensor / 273))
 #*****************************************************************************
 

@@ -13,12 +13,13 @@ Observaciones:
 Descripcion:
 Funcion1: Inicio de medicion, Payload[TiempoSeg]??
            Subfuncion1: Calcula el TOF y lee el sensor de temperatura.
-                   Subfuncion2: Captura la senal ultrasonica y lee el sensor de temperatura.
+           Subfuncion2: Captura la senal ultrasonica y lee el sensor de temperatura.
 Funcion2: Lectura de datos:
            Subfuncion1: Payload[t2Prom(4bytes) + tempRaw(2bytes)]
            Subfuncion2: vectorMuestras[700bytes]
            Subfuncion3: vectorEnvolvente[700bytes]
-
+Funcion3: Escritura de datos:
+           Subfuncion1: pulsosDistancia
 Funcion4: Test comunicacion:
            Subfuncion2: Test RS485
 ---------------------------------------------------------------------------------------------------------------------------*/
@@ -30,7 +31,7 @@ Funcion4: Test comunicacion:
 
 ////////////////////////////////////////////// Declaracion de variables y costantes ///////////////////////////////////////////////////////
 //Credenciales:
-#define IDNODO 1                                                                //Idendtificador del nodo
+#define IDNODO 2                                                                //Idendtificador del nodo
 
 //Funcion de transferencia h(n) filtro FIR (Fs=200KHz, Fc=5547Hz) Ventana Hamming
 const float h[]=
@@ -79,6 +80,8 @@ unsigned char direccionRS485, funcionRS485, subFuncionRS485;
 unsigned int numDatosRS485;
 unsigned char *ptrNumDatosRS485;
 unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, IDNODO};   //Trama de 10 elementos para probar la comunicacion RS485
+unsigned short contTMR3;
+
 //Variables para la peticion y respuesta de datos:
 unsigned char ir, ip, ipp;                             //Subindices para las tramas de peticion y respuesta
 
@@ -127,10 +130,11 @@ float T2adj;                                            //Variable para la calib
 float T2sum,T2prom;
 float T2, TOF;
 unsigned int temperaturaRaw;
+unsigned char pulsosDistancia;                         //Variable para controlar la distancia de instalacion por medio de un multiplicador del TMR2 (pulsosDistancia*12.5us)
 
 //Variables para procesar las peticiones
 unsigned char banderaPeticion;
-
+unsigned char banderaUART;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +171,8 @@ void main() {
      bm = 0;
      TOF = 0;
      temperaturaRaw = 0;
+     pulsosDistancia = 110;
+     
      //Comunicacion RS485:
      banRSI = 0;
      banRSC = 0;
@@ -177,13 +183,15 @@ void main() {
      numDatosRS485 = 0;
      ptrNumDatosRS485 = (unsigned char *) & numDatosRS485;
      MSRS485 = 0;
+     contTMR3 = 0;
 
      //Peticion:
      banderaPeticion = 0;
+     banderaUART = 0;
 
      //Puertos:
      LED1 = 0;
-     LED2 = 0;
+     LED2 = 1;
 
      ip=0;
 
@@ -254,7 +262,16 @@ void ConfiguracionPrincipal(){
      T2IF_bit = 0;                                                              //Limpia la bandera de interrupcion
      PR2 = 500;                                                                 //Genera una interrupcion cada 12.5us
      T2CON.TON = 0;                                                             //Apaga la interrupcion
-
+     
+     /*
+     ////Configuracion del TMR3:
+     T3CON = 0x8030;                                                            //Habilita el TMR3
+     IEC0.T3IE = 1;                                                              //Habilita la interrupcion por desborde de TMR3
+     T3IF_bit = 0;                                                              //Limpia la bandera de interrupcion
+     PR3 = 46875;                                                               //Genera una interrupcion cada 300ms
+     T3CON.TON = 0;                                                             //Apaga la interrupcion
+     */
+     
       //Configuracion UART:
      RPINR18bits.U1RXR = 0x06;                                                  //Asisgna Rx a RP6
      RPOR3bits.RP7R = 0x03;                                                     //Asigna Tx a RP7
@@ -265,6 +282,7 @@ void ConfiguracionPrincipal(){
      //Nivel de prioridad de las interrupciones (+alta -> +prioridad):
      IPC0bits.T1IP = 0x07;                                                      //Nivel de prioridad de la interrupcion por desbordamiento del TMR1
      IPC1bits.T2IP = 0x06;                                                      //Nivel de prioridad de la interrupcion por desbordamiento del TMR2
+     //IPC2bits.T3IP = 0x05;                                                      //Nivel de prioridad de la interrupcion por desbordamiento del TMR3
      IPC2bits.U1RXIP = 0x05;                                                    //Nivel de prioridad de la interrupcion UARTRX
 
      Delay_ms(100);                                                             //Espera hasta que se estabilicen los cambios
@@ -354,9 +372,20 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          break;
                }
                break;
+          case 3:
+               //Solicitud de escritura de datos:
+               switch (subFuncionSolicitud){
+                    case 1:
+                         //Actualiza la variable con el valor del payload
+                         pulsosDistancia = payloadSolicitud[0];
+                         LED1 = ~LED1;
+                         Delay_ms(250);
+                         LED1 = ~LED1;
+                         break;
+               }
+               break;
           case 4:
                //Test de comunicacion RS485:
-
                switch (subFuncionSolicitud){
                     case 2:
                          //Test trama corta:
@@ -655,7 +684,8 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
           RB2_bit = ~RB2_bit;                                                   //Conmuta el valor del pin RB14
      }else {
           RB2_bit = 0;                                                          //Pone a cero despues de enviar todos los pulsos de exitacion.
-          if (contPulsos==110){
+          //if (contPulsos==110){
+          if (contPulsos==pulsosDistancia){
               T2CON.TON = 0;                                                    //Apaga el TMR2
               TMR1 = 0;                                                         //Encera el TMR1
               T1CON.TON = 1;                                                    //Enciende el TMR1
@@ -668,12 +698,39 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
 
 }
 //********************************************************************************************************************************************
+/*//Interrupcion por desbordamiento del TMR3:
+void Timer3Interrupt() iv IVT_ADDR_T3INTERRUPT{
+
+     contTMR3++;                                                                //Incrementa el contador de TMR2
+
+     //Despues de 900ms apaga el TMR3 y vuelve a encender el UART1:
+     if (contTMR3==3){
+         TMR3 = 0;                                                              //Encera el TMR3
+         contTMR3 = 0;
+         //Limpia estas banderas para restablecer la comunicacion por RS485:
+         banRSI = 0;
+         banRSC = 0;
+         i_rs485 = 0;
+         //Activa el UART1:
+         banderaUART = 0;
+         T3CON.TON = 0;                                                         //Apaga el TMR3
+     }
+
+     T3IF_bit = 0;                                                              //Limpia la bandera de interrupcion por desbordamiento del Timer2
+
+}
+*/
+//********************************************************************************************************************************************
+//********************************************************************************************************************************************
 //Interrupcion por recepcion de datos a travez de UART
 void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
 
      U1RXIF_bit = 0;                                                            //Limpia la bandera de interrupcion de UARTRX
-     byteRS485 = UART1_Read();                                                  //Lee el byte recibido
-
+     
+     //if (banderaUART==0){
+        byteRS485 = UART1_Read();                                               //Lee el byte recibido
+     //}
+     
      //*Recupera el pyload de la trama RS485:                                   //Aqui deberia entrar despues de recuperar la cabecera de trama
      if (banRSI==2){
           //Recupera el pyload de final de trama:
@@ -694,6 +751,7 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
           }
      }
      if ((banRSI==1)&&(byteRS485!=0x3A)&&(i_rs485<5)){
+     //if ((banRSI==1)&&(i_rs485<5)){
           solicitudCabeceraRS485[i_rs485] = byteRS485;                          //Recupera los datos de cabecera de la trama UART: [Direccion, Funcion, Subfuncion, NumeroDatos]
           i_rs485++;
      }
@@ -709,6 +767,11 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
                banRSI = 0;
                banRSC = 0;
                i_rs485 = 0;
+               //T3CON.TON = 1;                                                   //Enciende el Timer3
+               //TMR3 = 0;                                                        //Encera el Timer3
+               //contTMR3 = 0;
+               //U1MODE.UARTEN = 0;                                               //Desactiva el UART1
+               //banderaUART = 1;
           }
      }
 
@@ -717,7 +780,7 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
           Delay_ms(100);                                                        //**Ojo: Este retardo es importante para que el Concentrador tenga tiempo de recibir la respuesta
           //Llama a la funcion para procesar la solicitud recibida:
           //ProcesarSolicitud(solicitudCabeceraRS485, solicitudPyloadRS485);
-          LED2 = ~LED2;
+          //LED2 = ~LED2;
           banderaPeticion = 1;
           //Limpia la bandera de trama completa:
           banRSC = 0;

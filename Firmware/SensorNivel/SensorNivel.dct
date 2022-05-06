@@ -1032,6 +1032,7 @@ b7
 b8
 b9
 banderapeticion
+banderauart
 banrsc
 banrsi
 bcd2dec
@@ -1353,6 +1354,7 @@ cnterr_bit
 configuracionprincipal
 contpulsos
 conts
+conttmr3
 corcon
 corconbits
 cos
@@ -4087,6 +4089,7 @@ ptsidl
 ptsidl_bit
 ptsidl_p1tcon_bit
 ptsidl_p2tcon_bit
+pulsosdistancia
 pwm1con1
 pwm1con1bits
 pwm1con2
