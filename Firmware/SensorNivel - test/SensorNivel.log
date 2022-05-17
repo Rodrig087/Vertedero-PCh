@@ -1,27 +1,9 @@
-0	1	mikroCdsPIC.exe -MSF -DBG -pP33FJ32MC202 -DL -SSA -O11111114 -fo80 -N"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel - test\SensorNivel.mcpds" -SP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for dsPIC\defs\" -SP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for dsPIC\uses\" -SP"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel - test\" -SP"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel\" -IP"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\Librerias\" "SensorNivel.c" "__Lib_Math.mcl" "__Lib_MathDouble.mcl" "__Lib_System.mcl" "__Lib_Delays.mcl" "__Lib_CString.mcl" "__Lib_CMath.mcl" "__Lib_Conversions.mcl" "__Lib_OneWire.mcl" "__Lib_UART_1_p24_p33.mcl" "__Lib_Vectors.mcl"	 
+0	1	mikroCdsPIC.exe -MSF -DBG -pP33FJ32MC202 -DL -SSA -O11111114 -fo80 -N"C:\Users\Ivan\Desktop\Milton Muñoz\Proyectos\Git\Proyecto Chanlud\Vertedero\Vertedero-PCh\Firmware\SensorNivel - test\SensorNivel.mcpds" -SP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for dsPIC\defs\" -SP"C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for dsPIC\uses\" -SP"C:\Users\Ivan\Desktop\Milton Muñoz\Proyectos\Git\Proyecto Chanlud\Vertedero\Vertedero-PCh\Firmware\SensorNivel - test\" -SP"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel - test\" -SP"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel\" -IP"C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\Librerias\" -IP"C:\Users\Ivan\Desktop\Milton Muñoz\Proyectos\Git\Proyecto Chanlud\Vertedero\Vertedero-PCh\Firmware\Librerias\" "SensorNivel.c" "__Lib_Math.mcl" "__Lib_MathDouble.mcl" "__Lib_System.mcl" "__Lib_Delays.mcl" "__Lib_CString.mcl" "__Lib_CMath.mcl" "__Lib_Conversions.mcl" "__Lib_OneWire.mcl" "__Lib_UART_1_p24_p33.mcl" "__Lib_Vectors.mcl"	 
 diagnostics: 0	121	Loading...	 
-hint: 47	1354	 warning: "/*" within comment     //*****************************************************************************************************************************************  l muestreada  imer, selecciona el preescalador 1:1,  75ns  -> ADCS = 2	C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel - test\SensorNivel.c
-hint: 49	1354	 warning: "/*" within comment	C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel - test\SensorNivel.c
-hint: 55	1354	 warning: "/*" within comment     //*****************************************************************************************************************************************  or R  ax y TOF  ativa de la senal?  eescalador 1:1,  75ns  -> ADCS = 2	C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel - test\SensorNivel.c
-hint: 57	1354	 warning: "/*" within comment     //*****************************************************************************************************************************************  cion ProcesarMuestras()  la senal?  eescalador 1:1,  75ns  -> ADCS = 2	C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel - test\SensorNivel.c
 diagnostics: 0	122	Compilation Started	rs485.c
-hint: 260	1163	Variable 'datoShort' has been declared, but not used	SensorNivel.c
-hint: 0	1004	interrupt handler (Timer1Interrupt at 0x001A)	SensorNivel.c
-hint: 0	1004	interrupt handler (Timer2Interrupt at 0x0022)	SensorNivel.c
-hint: 0	1004	interrupt handler (UART1Interrupt at 0x002A)	SensorNivel.c
-diagnostics: 704	123	Compiled Successfully	SensorNivel.c
-warning: 31	1512	variable 'numDatos' might not have been initialized	rs485.c
-warning: 592	1512	variable 'valorInt' might not have been initialized	SensorNivel.c
-warning: 266	1512	variable 'numDatosResp' might not have been initialized	SensorNivel.c
-warning: 267	1512	variable 'datoInt' might not have been initialized	SensorNivel.c
-warning: 268	1512	variable 'datoFloat' might not have been initialized	SensorNivel.c
-warning: 164	1519	Logical expression is always: 'False'	SensorNivel.c
-hint: 389	1164	Variable 'temperaturaCrudo' has been eliminated by optimizer	SensorNivel.c
-diagnostics: 0	127	All files Compiled in 78 ms	 
-hint: 0	1144	Used RX (bytes): 32 (100%)   Free RX (bytes): 0 (0%)	Used RX (bytes): 32 (100%)   Free RX (bytes): 0 (0%)
-hint: 0	1144	Static RAM (bytes): 787   Dynamic RAM (bytes): 1260	Static RAM (bytes): 787   Dynamic RAM (bytes): 1260
-hint: 0	1144	Used ROM (bytes): 2950 (13%)  Free ROM (bytes): 19578 (87%)	Used ROM (bytes): 2950 (13%)  Free ROM (bytes): 19578 (87%)
+diagnostics: 754	123	Compiled Successfully	SensorNivel.c
+diagnostics: 0	127	All files Compiled in 94 ms	 
 diagnostics: 0	125	Project Linked Successfully	SensorNivel.mcpds
-diagnostics: 0	128	Linked in 47 ms	 
-diagnostics: 0	129	Project 'SensorNivel.mcpds' completed: 172 ms	 
-diagnostics: 0	103	Finished successfully: 18 mar. 2022, 18:38:54	SensorNivel.mcpds
+diagnostics: 0	128	Linked in 78 ms	 
+diagnostics: 0	129	Project 'SensorNivel.mcpds' completed: 235 ms	 
+diagnostics: 0	103	Finished successfully: 16 may. 2022, 16:47:34	SensorNivel.mcpds

@@ -1351,7 +1351,9 @@ cnterr
 cnterr_bit
 configuracionprincipal
 contpulsos
+contpulsostmr3
 conts
+conttmr3
 corcon
 corconbits
 cos
@@ -5425,6 +5427,7 @@ tgate_t2con_bit
 tgate_t3con_bit
 timer1interrupt
 timer2interrupt
+timer3interrupt
 tmax
 tmr1
 tmr1_0

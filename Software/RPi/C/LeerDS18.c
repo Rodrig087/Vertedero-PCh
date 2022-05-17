@@ -1,5 +1,7 @@
 //Compilar:
 //gcc LeerDS18.c -o leerds18 -lbcm2835 -lwiringPi 
+//gcc /home/rsa/Programas/LeerDS18.c -o /home/rsa/Ejecutables/leertemperatura -lbcm2835 -lwiringPi 
+//sudo Ejecutables/leertemperatura
 
 /*-------------------------------------------------------------------------------------------------------------------------
 Autor: Milton Munoz
@@ -68,14 +70,14 @@ void ImprimirInformacion();
 void Salir();						
 
 
-int main() {
+int main(int argc, char *argv[]) {
 
-	//printf("Iniciando...\n");
-  
+	//Configuracion principal:
+	ConfiguracionPrincipal();
+	
 	//Inicializa las variables:
 	i = 0;
 	x = 0;
-	
 	idPet = 0;
 	funcionPet = 0;
 	subFuncionPet = 0;
@@ -84,16 +86,7 @@ int main() {
 	funcionPet = 0;
 	subFuncionResp = 0;
 	numDatosResp = 0;
-		
-	//Configuracion principal:
-	ConfiguracionPrincipal();
-	
-	//Datos de prueba:
-	idPet = 3;
-	funcionPet = 2;
-	subFuncionPet = 4;
-	numDatosPet = 0;
-	
+				
 	//Sumatorias de control:
 	sumEnviado = 0;
 	sumRecibido = 0;
@@ -107,6 +100,13 @@ int main() {
 	ptrTemperaturaResultado = (unsigned char *) & temperaturaResultado;
 	signoTemp = 0;
 	
+	//Datos de solicitud:
+	idPet = (char)(atoi(argv[1]));
+	funcionPet = 2;
+	subFuncionPet = 4;
+	numDatosPet = 0;
+	
+	//Envia la solicitud al nodo:
 	EnviarSolicitud(idPet, funcionPet, subFuncionPet, numDatosPet, payloadPet);
 	
 	while(1){}

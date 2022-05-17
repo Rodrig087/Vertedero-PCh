@@ -29,8 +29,8 @@ main
 			EnviarTramaRS485
 		GenerarTramaPrueba
 			EnviarTramaRS485
-	CapturarMuestras
 UART1Interrupt
 	UART1_Read
+Timer3Interrupt
 Timer2Interrupt
 Timer1Interrupt

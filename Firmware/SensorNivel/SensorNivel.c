@@ -80,7 +80,7 @@ unsigned char direccionRS485, funcionRS485, subFuncionRS485;
 unsigned int numDatosRS485;
 unsigned char *ptrNumDatosRS485;
 unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, IDNODO};   //Trama de 10 elementos para probar la comunicacion RS485
-unsigned short contTMR3;
+unsigned char contTMR3;
 
 //Variables para la peticion y respuesta de datos:
 unsigned char ir, ip, ipp;                             //Subindices para las tramas de peticion y respuesta
@@ -256,21 +256,21 @@ void ConfiguracionPrincipal(){
      PR1 = 200;                                                                 //Genera una interrupcion cada 5us (Fs=200KHz)
      T1CON.TON = 0;                                                             //Apaga la interrupcion
 
-     ////Configuracion del TMR2:
+     //Configuracion del TMR2:
      T2CON = 0x8000;                                                            //Habilita el TMR2, selecciona el reloj interno, desabilita el modo Gated Timer, selecciona el preescalador 1:1,
      IEC0.T2IE = 1;                                                             //Habilita la interrupcion por desborde de TMR2
      T2IF_bit = 0;                                                              //Limpia la bandera de interrupcion
      PR2 = 500;                                                                 //Genera una interrupcion cada 12.5us
      T2CON.TON = 0;                                                             //Apaga la interrupcion
      
-     /*
-     ////Configuracion del TMR3:
+
+     //Configuracion del TMR3:
      T3CON = 0x8030;                                                            //Habilita el TMR3
-     IEC0.T3IE = 1;                                                              //Habilita la interrupcion por desborde de TMR3
+     IEC0.T3IE = 1;                                                             //Habilita la interrupcion por desborde de TMR3
      T3IF_bit = 0;                                                              //Limpia la bandera de interrupcion
      PR3 = 46875;                                                               //Genera una interrupcion cada 300ms
      T3CON.TON = 0;                                                             //Apaga la interrupcion
-     */
+
      
       //Configuracion UART:
      RPINR18bits.U1RXR = 0x06;                                                  //Asisgna Rx a RP6
@@ -387,7 +387,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
           case 4:
                //Test de comunicacion RS485:
                switch (subFuncionSolicitud){
-                    case 2:
+                    case 1:
                          //Test trama corta:
                          //Actualiza el numero de payload:
                          numDatosResp = 10;
@@ -396,7 +396,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
                          EnviarTramaRS485(1, cabeceraSolicitud, tramaPruebaRS485);
                          LED1 = ~LED1;
                          break;
-                    case 3:
+                    case 2:
                          //Test trama larga:
                          //Actualiza el numero de payload:
                          numDatosResp = 512;

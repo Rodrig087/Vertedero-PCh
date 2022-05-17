@@ -387,6 +387,18 @@ _ConfiguracionPrincipal:
 	MOV	WREG, PR2
 ;SensorNivel.c,264 :: 		T2CON.TON = 0;                                                             //Apaga la interrupcion
 	BCLR	T2CON, #15
+;SensorNivel.c,268 :: 		T3CON = 0x8030;                                                            //Habilita el TMR3
+	MOV	#32816, W0
+	MOV	WREG, T3CON
+;SensorNivel.c,269 :: 		IEC0.T3IE = 1;                                                             //Habilita la interrupcion por desborde de TMR3
+	BSET	IEC0, #8
+;SensorNivel.c,270 :: 		T3IF_bit = 0;                                                              //Limpia la bandera de interrupcion
+	BCLR	T3IF_bit, BitPos(T3IF_bit+0)
+;SensorNivel.c,271 :: 		PR3 = 46875;                                                               //Genera una interrupcion cada 300ms
+	MOV	#46875, W0
+	MOV	WREG, PR3
+;SensorNivel.c,272 :: 		T3CON.TON = 0;                                                             //Apaga la interrupcion
+	BCLR	T3CON, #15
 ;SensorNivel.c,276 :: 		RPINR18bits.U1RXR = 0x06;                                                  //Asisgna Rx a RP6
 	MOV.B	#6, W0
 	MOV.B	W0, W1
@@ -717,7 +729,7 @@ L_ProcesarSolicitud32:
 ; ptrNumDatosResp start address is: 18 (W9)
 	GOTO	L_ProcesarSolicitud33
 ; subFuncionSolicitud end address is: 0 (W0)
-;SensorNivel.c,390 :: 		case 2:
+;SensorNivel.c,390 :: 		case 1:
 L_ProcesarSolicitud35:
 ;SensorNivel.c,393 :: 		numDatosResp = 10;
 	MOV	#10, W0
@@ -739,7 +751,7 @@ L_ProcesarSolicitud35:
 	BTG	LATA4_bit, BitPos(LATA4_bit+0)
 ;SensorNivel.c,398 :: 		break;
 	GOTO	L_ProcesarSolicitud34
-;SensorNivel.c,399 :: 		case 3:
+;SensorNivel.c,399 :: 		case 2:
 L_ProcesarSolicitud36:
 ;SensorNivel.c,402 :: 		numDatosResp = 512;
 ; ptrNumDatosResp start address is: 18 (W9)
@@ -763,11 +775,11 @@ L_ProcesarSolicitud36:
 L_ProcesarSolicitud33:
 ; subFuncionSolicitud start address is: 0 (W0)
 ; ptrNumDatosResp start address is: 18 (W9)
-	CP.B	W0, #2
+	CP.B	W0, #1
 	BRA NZ	L__ProcesarSolicitud134
 	GOTO	L_ProcesarSolicitud35
 L__ProcesarSolicitud134:
-	CP.B	W0, #3
+	CP.B	W0, #2
 	BRA NZ	L__ProcesarSolicitud135
 	GOTO	L_ProcesarSolicitud36
 L__ProcesarSolicitud135:

@@ -29,7 +29,7 @@ Funcion4: Test comunicacion:
 
 ////////////////////////////////////////////// Declaracion de variables y costantes ///////////////////////////////////////////////////////
 //Credenciales:
-#define IDNODO 3                                                                //Idendtificador del nodo
+#define IDNODO 2                                                                //Idendtificador del nodo
 
 //Declaracion de pines:
 sbit MSRS485 at LATB5_bit;                                                     //Definicion del pin MS RS485
@@ -52,6 +52,9 @@ unsigned char direccionRS485, funcionRS485, subFuncionRS485;
 unsigned int numDatosRS485;
 unsigned char *ptrNumDatosRS485;
 unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, IDNODO};   //Trama de 10 elementos para probar la comunicacion RS485
+unsigned char contTMR3;                                                         //Contador para implementar el timeout
+unsigned char contPulsosTMR3;
+
 //Variables para la peticion y respuesta de datos:
 unsigned char ir, ip, ipp;                             //Subindices para las tramas de peticion y respuesta
 
@@ -150,6 +153,8 @@ void main() {
      numDatosRS485 = 0;
      ptrNumDatosRS485 = (unsigned char *) & numDatosRS485;
      MSRS485 = 0;
+     contTMR3 = 0;
+     contPulsosTMR3 = 0;
 
      //Peticion:
      banderaPeticion = 0;
@@ -162,14 +167,16 @@ void main() {
 
      //Prueba
      while(1){
+          
           if (banderaPeticion==1){
           
              ProcesarSolicitud(solicitudCabeceraRS485, solicitudPyloadRS485);
           
           }
           
-          CapturarMuestras();
-          Delay_ms(500);
+          //Test de funcionamiento del transductor:
+          //CapturarMuestras();
+          //Delay_ms(500);
 
           
      }
@@ -227,14 +234,21 @@ void ConfiguracionPrincipal(){
      PR1 = 200;                                                                 //Genera una interrupcion cada 5us (Fs=200KHz)
      T1CON.TON = 0;                                                             //Apaga la interrupcion
 
-     ////Configuracion del TMR2:
+     //Configuracion del TMR2:
      T2CON = 0x8000;                                                            //Habilita el TMR2, selecciona el reloj interno, desabilita el modo Gated Timer, selecciona el preescalador 1:1,
      IEC0.T2IE = 1;                                                             //Habilita la interrupcion por desborde de TMR2
      T2IF_bit = 0;                                                              //Limpia la bandera de interrupcion
      PR2 = 500;                                                                 //Genera una interrupcion cada 12.5us
      T2CON.TON = 0;                                                             //Apaga la interrupcion
 
-      //Configuracion UART:
+     //Configuracion del TMR3:
+     T3CON = 0x8030;                                                            //Habilita el TMR3
+     IEC0.T3IE = 1;                                                             //Habilita la interrupcion por desborde de TMR3
+     T3IF_bit = 0;                                                              //Limpia la bandera de interrupcion
+     PR3 = 46875;                                                               //Genera una interrupcion cada 300ms
+     T3CON.TON = 1;                                                             //Apaga la interrupcion
+     
+     //Configuracion UART:
      RPINR18bits.U1RXR = 0x06;                                                  //Asisgna Rx a RP6
      RPOR3bits.RP7R = 0x03;                                                     //Asigna Tx a RP7
      IEC0.U1RXIE = 1;                                                           //Habilita la interrupcion por recepcion de dato por UART
@@ -644,6 +658,42 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
      }
      contPulsos++;                                                              //Aumenta el contador en una unidad.
      T2IF_bit = 0;                                                              //Limpia la bandera de interrupcion por desbordamiento del TMR2
+
+}
+//********************************************************************************************************************************************
+//Interrupcion por desbordamiento del TMR3:
+void Timer3Interrupt() iv IVT_ADDR_T3INTERRUPT{
+
+     contTMR3++;                                                                //Incrementa el contador de TMR2
+
+     //Despues de 900ms apaga el TMR3 y vuelve a encender el UART1:
+     if (contTMR3==3){
+         TMR3 = 0;                                                              //Encera el TMR3
+         contTMR3 = 0;
+         //Limpia estas banderas para restablecer la comunicacion por RS485:
+         banRSI = 0;
+         banRSC = 0;
+         i_rs485 = 0;
+         
+         //Inicio test
+         LED1 = ~LED1;
+         contPulsosTMR3++;
+         //Fin test
+         
+         //Activa el UART1:
+         //banderaUART = 0;
+         //T3CON.TON = 0;                                                         //Apaga el TMR3
+     }
+
+     //*************************************************************************
+     //Test
+     if (contPulsosTMR3==10){
+         T3CON.TON = 0;                                                         //Apaga el TMR3
+     }
+     //LED1 = ~LED1;
+     //*************************************************************************
+
+     T3IF_bit = 0;                                                              //Limpia la bandera de interrupcion por desbordamiento del Timer2
 
 }
 //********************************************************************************************************************************************

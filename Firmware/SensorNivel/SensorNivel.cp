@@ -1,6 +1,6 @@
-#line 1 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
-#line 1 "c:/users/milto/milton/rsa/git/proyecto chanlud/vertedero pch/vertedero-pch/firmware/librerias/rs485.c"
-#line 13 "c:/users/milto/milton/rsa/git/proyecto chanlud/vertedero pch/vertedero-pch/firmware/librerias/rs485.c"
+#line 1 "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Git/Proyecto Chanlud/Vertedero/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 1 "c:/users/ivan/desktop/milton muñoz/proyectos/git/proyecto chanlud/vertedero/vertedero-pch/firmware/librerias/rs485.c"
+#line 13 "c:/users/ivan/desktop/milton muñoz/proyectos/git/proyecto chanlud/vertedero/vertedero-pch/firmware/librerias/rs485.c"
 extern sfr sbit MSRS485;
 extern sfr sbit MSRS485_Direction;
 
@@ -51,7 +51,7 @@ void EnviarTramaRS485(unsigned char puertoUART, unsigned char *cabecera, unsigne
  }
 
 }
-#line 37 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 37 "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Git/Proyecto Chanlud/Vertedero/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
 const float h[]=
 {
 0,
@@ -98,7 +98,7 @@ unsigned char direccionRS485, funcionRS485, subFuncionRS485;
 unsigned int numDatosRS485;
 unsigned char *ptrNumDatosRS485;
 unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  2 };
-unsigned short contTMR3;
+unsigned char contTMR3;
 
 
 unsigned char ir, ip, ipp;
@@ -280,7 +280,17 @@ void ConfiguracionPrincipal(){
  T2IF_bit = 0;
  PR2 = 500;
  T2CON.TON = 0;
-#line 276 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+
+
+
+ T3CON = 0x8030;
+ IEC0.T3IE = 1;
+ T3IF_bit = 0;
+ PR3 = 46875;
+ T3CON.TON = 0;
+
+
+
  RPINR18bits.U1RXR = 0x06;
  RPOR3bits.RP7R = 0x03;
  IEC0.U1RXIE = 1;
@@ -395,7 +405,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  case 4:
 
  switch (subFuncionSolicitud){
- case 2:
+ case 1:
 
 
  numDatosResp = 10;
@@ -404,7 +414,7 @@ void ProcesarSolicitud(unsigned char *cabeceraSolicitud, unsigned char *payloadS
  EnviarTramaRS485(1, cabeceraSolicitud, tramaPruebaRS485);
  LED1 = ~LED1;
  break;
- case 3:
+ case 2:
 
 
  numDatosResp = 512;
@@ -705,7 +715,7 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
  T2IF_bit = 0;
 
 }
-#line 726 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
+#line 726 "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Git/Proyecto Chanlud/Vertedero/Vertedero-PCh/Firmware/SensorNivel/SensorNivel.c"
 void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
 
  U1RXIF_bit = 0;

@@ -33,13 +33,15 @@ Count=0
 [OTHER_FILES]
 Count=0
 [SEARCH_PATH]
-Count=3
+Count=4
 Path0=C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for dsPIC\defs\
 Path1=C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for dsPIC\uses\
-Path2=C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel\
+Path2=C:\Users\Ivan\Desktop\Milton Muñoz\Proyectos\Git\Proyecto Chanlud\Vertedero\Vertedero-PCh\Firmware\SensorNivel\
+Path3=C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\SensorNivel\
 [HEADER_PATH]
-Count=1
+Count=2
 Path0=C:\Users\milto\Milton\RSA\Git\Proyecto Chanlud\Vertedero PCh\Vertedero-PCh\Firmware\Librerias\
+Path1=C:\Users\Ivan\Desktop\Milton Muñoz\Proyectos\Git\Proyecto Chanlud\Vertedero\Vertedero-PCh\Firmware\Librerias\
 [HEADERS]
 Count=0
 [PLDS]

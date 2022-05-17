@@ -1,6 +1,6 @@
-#line 1 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
-#line 1 "c:/users/milto/milton/rsa/git/proyecto chanlud/vertedero pch/vertedero-pch/firmware/librerias/rs485.c"
-#line 13 "c:/users/milto/milton/rsa/git/proyecto chanlud/vertedero pch/vertedero-pch/firmware/librerias/rs485.c"
+#line 1 "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Git/Proyecto Chanlud/Vertedero/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
+#line 1 "c:/users/ivan/desktop/milton muñoz/proyectos/git/proyecto chanlud/vertedero/vertedero-pch/firmware/librerias/rs485.c"
+#line 13 "c:/users/ivan/desktop/milton muñoz/proyectos/git/proyecto chanlud/vertedero/vertedero-pch/firmware/librerias/rs485.c"
 extern sfr sbit MSRS485;
 extern sfr sbit MSRS485_Direction;
 
@@ -51,7 +51,7 @@ void EnviarTramaRS485(unsigned char puertoUART, unsigned char *cabecera, unsigne
  }
 
 }
-#line 35 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
+#line 35 "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Git/Proyecto Chanlud/Vertedero/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
 sbit MSRS485 at LATB5_bit;
 sbit MSRS485_Direction at TRISB5_bit;
 sbit LED1 at LATA4_bit;
@@ -71,7 +71,10 @@ unsigned char respuestaPyloadRS485[15];
 unsigned char direccionRS485, funcionRS485, subFuncionRS485;
 unsigned int numDatosRS485;
 unsigned char *ptrNumDatosRS485;
-unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  3 };
+unsigned char tramaPruebaRS485[10]= {0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB,  2 };
+unsigned char contTMR3;
+unsigned char contPulsosTMR3;
+
 
 unsigned char ir, ip, ipp;
 
@@ -170,6 +173,8 @@ void main() {
  numDatosRS485 = 0;
  ptrNumDatosRS485 = (unsigned char *) & numDatosRS485;
  MSRS485 = 0;
+ contTMR3 = 0;
+ contPulsosTMR3 = 0;
 
 
  banderaPeticion = 0;
@@ -182,14 +187,16 @@ void main() {
 
 
  while(1){
+
  if (banderaPeticion==1){
 
  ProcesarSolicitud(solicitudCabeceraRS485, solicitudPyloadRS485);
 
  }
 
- CapturarMuestras();
- Delay_ms(500);
+
+
+
 
 
  }
@@ -253,6 +260,13 @@ void ConfiguracionPrincipal(){
  T2IF_bit = 0;
  PR2 = 500;
  T2CON.TON = 0;
+
+
+ T3CON = 0x8030;
+ IEC0.T3IE = 1;
+ T3IF_bit = 0;
+ PR3 = 46875;
+ T3CON.TON = 1;
 
 
  RPINR18bits.U1RXR = 0x06;
@@ -486,7 +500,7 @@ void CapturarMuestras(){
  LED1 = 0;
 
 }
-#line 584 "C:/Users/milto/Milton/RSA/Git/Proyecto Chanlud/Vertedero PCh/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
+#line 598 "C:/Users/Ivan/Desktop/Milton Muñoz/Proyectos/Git/Proyecto Chanlud/Vertedero/Vertedero-PCh/Firmware/SensorNivel - test/SensorNivel.c"
 void EnviarTramaInt(unsigned char* cabecera, unsigned int temperatura){
 
 
@@ -554,6 +568,42 @@ void Timer2Interrupt() iv IVT_ADDR_T2INTERRUPT{
 }
 
 
+void Timer3Interrupt() iv IVT_ADDR_T3INTERRUPT{
+
+ contTMR3++;
+
+
+ if (contTMR3==3){
+ TMR3 = 0;
+ contTMR3 = 0;
+
+ banRSI = 0;
+ banRSC = 0;
+ i_rs485 = 0;
+
+
+ LED1 = ~LED1;
+ contPulsosTMR3++;
+
+
+
+
+
+ }
+
+
+
+ if (contPulsosTMR3==10){
+ T3CON.TON = 0;
+ }
+
+
+
+ T3IF_bit = 0;
+
+}
+
+
 void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
 
  U1RXIF_bit = 0;
@@ -584,7 +634,7 @@ void UART1Interrupt() iv IVT_ADDR_U1RXINTERRUPT {
  }
  if ((banRSI==1)&&(i_rs485==5)){
 
- if ((solicitudCabeceraRS485[0]== 3 )||(solicitudCabeceraRS485[0]==255)){
+ if ((solicitudCabeceraRS485[0]== 2 )||(solicitudCabeceraRS485[0]==255)){
 
  *(ptrNumDatosRS485) = solicitudCabeceraRS485[3];
  *(ptrNumDatosRS485+1) = solicitudCabeceraRS485[4];
